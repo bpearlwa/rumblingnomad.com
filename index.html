@@ -7,838 +7,932 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Rumbling Nomad">
 <meta name="theme-color" content="#0f0f0f">
-<title>Spokane → Durango · Rumbling Nomad</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>Rumbling Nomad</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --asphalt: #0f0f0f;
-  --asphalt-2: #1a1a1a;
-  --asphalt-3: #242424;
-  --asphalt-4: #2e2e2e;
-  --amber: #f59e0b;
-  --amber-dim: #92600a;
-  --ember: #ef4444;
-  --smoke: #888;
-  --smoke-light: #bbb;
-  --white: #f5f5f0;
-  --green: #22c55e;
-  --purple: #a78bfa;
-  --blue: #60a5fa;
+:root{
+  --asphalt:#0f0f0f;--asphalt-2:#1a1a1a;--asphalt-3:#242424;--asphalt-4:#2e2e2e;
+  --amber:#f59e0b;--amber-dim:#92600a;--ember:#ef4444;
+  --smoke:#888;--smoke-light:#bbb;--white:#f5f5f0;
+  --green:#22c55e;--purple:#a78bfa;--blue:#60a5fa;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--asphalt);color:var(--white);font-family:'Barlow',sans-serif;overflow:hidden}
-/* APP SHELL */
-#app{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:480px;margin:0 auto;position:relative}
-/* HEADER */
-.app-header{padding:12px 16px 8px;background:var(--asphalt);border-bottom:1px solid var(--asphalt-3);flex-shrink:0}
-.app-header h1{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.08em;color:var(--amber);line-height:1}
-.app-header p{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--smoke);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
-/* NAV TABS */
+html,body{height:100%;height:100dvh;background:var(--asphalt);color:var(--white);font-family:'Barlow',sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:480px;margin:0 auto}
+.app-header{padding:10px 14px 6px;background:var(--asphalt);border-bottom:1px solid var(--asphalt-3);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.header-left h1{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.08em;color:var(--amber);line-height:1}
+.header-left p{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--smoke);letter-spacing:.05em;text-transform:uppercase;margin-top:1px}
+.header-actions{display:flex;gap:6px}
+.hbtn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;border-radius:4px;cursor:pointer;border:1px solid var(--asphalt-4);background:transparent;color:var(--smoke)}
+.hbtn.primary{background:var(--amber);color:var(--asphalt);border-color:var(--amber)}
 .nav-tabs{display:flex;background:var(--asphalt-2);border-bottom:1px solid var(--asphalt-3);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:10px 14px;white-space:nowrap;cursor:pointer;color:var(--smoke);border-bottom:2px solid transparent;transition:all .2s;flex-shrink:0}
+.nav-tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:9px 13px;white-space:nowrap;cursor:pointer;color:var(--smoke);border-bottom:2px solid transparent;flex-shrink:0}
 .nav-tab.active{color:var(--amber);border-bottom-color:var(--amber)}
-/* SCROLL AREA */
 .scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .scroll-area::-webkit-scrollbar{display:none}
-.panel{display:none;padding:12px 12px 80px}
+.panel{display:none;padding:12px 12px 90px}
 .panel.active{display:block}
-/* TIMELINE BAR */
-.timeline{display:flex;border-radius:4px;overflow:hidden;margin-bottom:14px;height:24px}
-.tleg{display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:0 4px}
-/* DAY CARDS */
+.bottom-nav{display:flex;background:var(--asphalt-2);border-top:1px solid var(--asphalt-3);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 4px;cursor:pointer;color:var(--smoke)}
+.bnav-item.active{color:var(--amber)}
+.bnav-icon{font-size:18px;line-height:1;margin-bottom:1px}
+.bnav-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+/* CARDS */
 .day-card{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:10px;margin-bottom:10px;overflow:hidden}
-.day-card-header{padding:10px 14px 8px;cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px}
-.day-card-header:active{background:var(--asphalt-3)}
-.day-date{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--smoke);min-width:56px}
-.day-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--white);flex:1;line-height:1.2}
-.day-miles{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--smoke);text-align:right;white-space:nowrap}
-.day-chevron{color:var(--smoke);font-size:12px;transition:transform .2s;margin-left:2px}
-.day-body{display:none;padding:0 14px 12px;border-top:1px solid var(--asphalt-3)}
-.day-body.open{display:block}
+.day-card.hl{border-left:3px solid var(--amber)}
+.day-card.devil{border-left:3px solid var(--ember)}
+.card-header{padding:10px 12px 8px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.card-header:active{background:var(--asphalt-3)}
+.card-date{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke);min-width:50px;flex-shrink:0}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--white);flex:1;line-height:1.2}
+.card-miles{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--smoke);white-space:nowrap}
+.card-chev{color:var(--smoke);font-size:11px;transition:transform .2s;flex-shrink:0}
+.card-body{display:none;padding:0 12px 12px;border-top:1px solid var(--asphalt-3)}
+.card-body.open{display:block}
 /* STOPS */
-.stops{padding-top:10px;display:flex;flex-direction:column;gap:0}
-.stop{display:flex;gap:10px;position:relative;padding-bottom:10px}
-.stop:last-child{padding-bottom:0}
-.stop-left{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0}
-.stop-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.stop-line{width:1px;background:var(--asphalt-4);flex:1;margin-top:4px;min-height:12px}
-.stop:last-child .stop-line{display:none}
-.stop-content{}
-.stop-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:500;color:var(--white);line-height:1.3}
-.stop-note{font-size:12px;color:var(--smoke);line-height:1.5;margin-top:2px;font-weight:300}
-.hotel-row{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--asphalt-3);font-size:12px;color:var(--smoke);line-height:1.5}
-/* BADGES */
-.badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.05em;padding:2px 6px;border-radius:3px;text-transform:uppercase;display:inline-block;margin-left:5px;vertical-align:middle}
-.b-critical{background:#450a0a;color:#ef4444}
-.b-scenic{background:#052e16;color:#22c55e}
-.b-warn{background:#431407;color:#fb923c}
-.b-devil{background:#450a0a;color:#f87171}
-.b-mdh{background:#1e1b4b;color:#a78bfa}
-.b-rest{background:#0c1a2e;color:#60a5fa}
-.b-rally{background:#052e16;color:#4ade80}
-.b-nice{background:#1a1a1a;color:#888}
-/* HIGHLIGHT CARD */
-.hl-card{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-left:3px solid var(--amber);border-radius:10px;margin-bottom:10px;overflow:hidden}
-.hl-card-header{padding:10px 14px 8px;cursor:pointer;display:flex;align-items:center;gap:10px}
-.hl-card-header:active{background:var(--asphalt-3)}
-.hl-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--amber);flex:1}
-.hl-body{display:none;padding:0 14px 12px;border-top:1px solid var(--asphalt-3)}
-.hl-body.open{display:block}
-/* STATS */
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.stat{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:10px 10px 8px}
-.stat-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--smoke);margin-bottom:3px}
-.stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amber);letter-spacing:.02em;line-height:1}
-.stat-sub{font-size:11px;color:var(--smoke);margin-top:1px;font-weight:300}
-/* TIPS */
-.tip{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:var(--smoke-light);line-height:1.6;font-weight:300}
-.tip strong{font-weight:500;color:var(--white)}
+.stops-list{padding-top:8px}
+.stop-item{display:flex;gap:8px;padding-bottom:8px}
+.stop-left{display:flex;flex-direction:column;align-items:center;width:12px;flex-shrink:0}
+.stop-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.stop-line{width:1px;background:var(--asphalt-4);flex:1;margin-top:3px;min-height:10px}
+.stop-item:last-child .stop-line{display:none}
+.stop-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:500;color:var(--white);line-height:1.3}
+.stop-note{font-size:12px;color:var(--smoke);line-height:1.4;margin-top:1px;font-weight:300}
+.hotel-row{display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--asphalt-3);font-size:12px;color:var(--smoke);line-height:1.5;margin-top:4px}
+/* EDIT */
+.edit-field{background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:6px;color:var(--white);font-family:'Barlow',sans-serif;font-size:13px;padding:7px 10px;width:100%;outline:none;margin-bottom:6px}
+.edit-field:focus{border-color:var(--amber-dim)}
+textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
+.field-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke);margin-bottom:3px;margin-top:8px}
+.field-label:first-child{margin-top:10px}
+.field-row{display:flex;gap:6px}
+.field-row .edit-field{margin-bottom:0}
+/* BUTTONS */
+.small-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:7px 12px;border-radius:6px;cursor:pointer;border:1px solid var(--asphalt-4);background:transparent;color:var(--smoke);white-space:nowrap;flex-shrink:0}
+.small-btn.amber{background:var(--amber);color:var(--asphalt);border-color:var(--amber)}
+.small-btn.red{border-color:#450a0a;color:var(--ember)}
+.add-row-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;background:transparent;border:1px dashed var(--asphalt-4);border-radius:6px;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;width:100%;margin-top:4px}
+.add-row-btn:active{border-color:var(--amber);color:var(--amber)}
+.edit-day-btn{display:flex;align-items:center;gap:5px;padding:6px 10px;background:transparent;border:1px solid var(--asphalt-4);border-radius:6px;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;margin-top:10px}
+.edit-day-btn:active{border-color:var(--amber);color:var(--amber)}
+/* OVERVIEW */
+.intro-card{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-top:3px solid var(--amber);border-radius:10px;padding:12px;margin-bottom:12px}
+.intro-route{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.03em;color:var(--white);line-height:1}
+.intro-route span{color:var(--amber)}
+.intro-dates{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--smoke);margin-top:3px}
+.intro-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.intro-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;padding:2px 7px;border:1px solid var(--asphalt-4);border-radius:3px;color:var(--smoke-light);text-transform:uppercase}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.stat{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:8px 10px}
+.stat-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--smoke);margin-bottom:2px}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--amber);line-height:1}
+.tip{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:9px 11px;margin-bottom:7px;font-size:13px;color:var(--smoke-light);line-height:1.6;font-weight:300}
+.tip b{font-weight:500;color:var(--white)}
 .tip.critical{border-left:3px solid var(--ember)}
 .tip.good{border-left:3px solid var(--green)}
 .tip.info{border-left:3px solid var(--blue)}
+.timeline{display:flex;border-radius:4px;overflow:hidden;margin-bottom:12px;height:22px}
+.tseg{display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:0 4px}
+.sec-header{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;color:var(--white);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 /* CHECKLIST */
-.check-section{margin-bottom:16px}
-.check-section-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--amber-dim);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--asphalt-3)}
-.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--asphalt-3);cursor:pointer;-webkit-user-select:none;user-select:none}
-.check-item:last-child{border-bottom:none}
-.check-item:active{opacity:.7}
-.check-box{width:20px;height:20px;border:1.5px solid var(--asphalt-4);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:transparent}
-.check-box.done{background:var(--amber);border-color:var(--amber)}
-.check-box.done::after{content:'✓';font-size:12px;color:var(--asphalt);font-weight:700}
-.check-text{flex:1}
-.check-label{font-size:14px;color:var(--white);line-height:1.4;font-weight:400;transition:color .15s}
-.check-label.done{color:var(--smoke);text-decoration:line-through;text-decoration-color:var(--asphalt-4)}
-.check-note{font-size:12px;color:var(--smoke);margin-top:2px;line-height:1.4;font-weight:300}
-/* PROGRESS */
-.progress-wrap{background:var(--asphalt-2);border-radius:8px;padding:12px;margin-bottom:14px}
-.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.progress-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--smoke-light)}
-.progress-count{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber)}
-.progress-track{height:4px;background:var(--asphalt-4);border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;background:var(--amber);border-radius:2px;transition:width .3s;width:0%}
-/* CHECKLIST TABS */
-.check-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.check-tab{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--asphalt-4);border-radius:20px;cursor:pointer;color:var(--smoke);transition:all .15s;background:transparent}
+.check-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.check-tab{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--asphalt-4);border-radius:20px;cursor:pointer;color:var(--smoke);background:transparent}
 .check-tab.active{background:var(--amber);color:var(--asphalt);border-color:var(--amber)}
-.check-panel{display:none}
-.check-panel.active{display:block}
-/* RESET BTN */
-.reset-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--asphalt-4);border-radius:20px;background:transparent;color:var(--smoke);cursor:pointer}
-/* SECTION HEADER */
-.section-header{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.06em;color:var(--white);margin-bottom:10px;margin-top:4px}
-/* BOTTOM NAV */
-.bottom-nav{display:flex;background:var(--asphalt-2);border-top:1px solid var(--asphalt-3);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
-.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;cursor:pointer;color:var(--smoke);transition:color .15s}
-.bottom-nav-item.active{color:var(--amber)}
-.bottom-nav-item:active{opacity:.7}
-.bnav-icon{font-size:20px;line-height:1;margin-bottom:2px}
-.bnav-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-/* INTRO CARD */
-.intro-card{background:linear-gradient(135deg,var(--asphalt-2) 0%,var(--asphalt-3) 100%);border:1px solid var(--asphalt-3);border-top:3px solid var(--amber);border-radius:10px;padding:14px;margin-bottom:14px}
-.intro-route{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.04em;color:var(--white);line-height:1}
-.intro-route span{color:var(--amber)}
-.intro-dates{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--smoke);margin-top:4px;letter-spacing:.04em}
-.intro-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.intro-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;padding:3px 8px;border:1px solid var(--asphalt-4);border-radius:3px;color:var(--smoke-light);text-transform:uppercase}
+.check-panel{display:none}.check-panel.active{display:block}
+.check-section{margin-bottom:14px}
+.check-sec-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--amber-dim);margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid var(--asphalt-3)}
+.check-item{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid var(--asphalt-3);cursor:pointer;-webkit-user-select:none;user-select:none}
+.check-item:last-child{border-bottom:none}
+.check-box{width:19px;height:19px;border:1.5px solid var(--asphalt-4);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.check-box.done{background:var(--amber);border-color:var(--amber)}
+.check-box.done::after{content:'✓';font-size:11px;color:var(--asphalt);font-weight:700}
+.check-label{flex:1;font-size:13px;color:var(--white);line-height:1.4}
+.check-label.done{color:var(--smoke);text-decoration:line-through}
+.check-note{font-size:11px;color:var(--smoke);margin-top:2px;line-height:1.4;font-weight:300;display:block}
+.check-del{background:transparent;border:none;color:var(--asphalt-4);font-size:15px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-top:1px}
+.check-del:active{color:var(--ember)}
+.progress-wrap{background:var(--asphalt-2);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--smoke-light)}
+.progress-track{height:3px;background:var(--asphalt-4);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--amber);border-radius:2px;transition:width .3s;width:0%}
+.reset-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border:1px solid var(--asphalt-4);border-radius:20px;background:transparent;color:var(--smoke);cursor:pointer}
+.add-check-row{display:flex;gap:6px;margin-top:8px}
+.add-check-row .edit-field{margin-bottom:0;flex:1}
+/* STOP EDIT */
+.stop-edit-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px;background:var(--asphalt-3);border-radius:6px;padding:8px}
+.stop-edit-inputs{flex:1;display:flex;flex-direction:column;gap:4px}
+.stop-edit-inputs .edit-field{margin-bottom:0;background:var(--asphalt-4)}
+.stop-del-btn{background:transparent;border:none;color:var(--smoke);font-size:18px;cursor:pointer;padding:2px 0;line-height:1;flex-shrink:0;margin-top:2px}
+.stop-del-btn:active{color:var(--ember)}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--asphalt-2);border-top:1px solid var(--asphalt-3);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.05em;color:var(--amber);margin-bottom:12px}
+.modal-actions{display:flex;gap:8px;margin-top:14px}
+.modal-actions .small-btn{flex:1;text-align:center}
+/* SHARE */
+.share-url{background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:6px;padding:10px;font-size:12px;color:var(--smoke-light);word-break:break-all;line-height:1.5;margin:10px 0;font-family:monospace}
+/* TRIP LIST */
+.trip-item{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.trip-item:active{border-color:var(--amber)}
+.trip-info{flex:1}
+.trip-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--white)}
+.trip-meta{font-size:12px;color:var(--smoke);margin-top:2px}
+.trip-arrow{color:var(--smoke);font-size:18px}
+.badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.04em;padding:2px 5px;border-radius:3px;text-transform:uppercase;display:inline-block;margin-left:4px;vertical-align:middle}
+.b-critical{background:#450a0a;color:#ef4444}
 </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- HEADER -->
   <div class="app-header">
-    <h1>RUMBLING NOMAD</h1>
-    <p>Spokane → Durango · June 7–18, 2025</p>
+    <div class="header-left">
+      <h1>RUMBLING NOMAD</h1>
+      <p id="hdr-sub">Your Trips</p>
+    </div>
+    <div class="header-actions" id="hdr-actions"></div>
   </div>
-
-  <!-- TOP NAV -->
-  <div class="nav-tabs" id="main-nav">
-    <div class="nav-tab active" onclick="showMain('overview',this)">Overview</div>
-    <div class="nav-tab" onclick="showMain('down',this)">Ride Down</div>
-    <div class="nav-tab" onclick="showMain('durango',this)">Durango</div>
-    <div class="nav-tab" onclick="showMain('return',this)">Return</div>
-    <div class="nav-tab" onclick="showMain('checklist',this)">Checklist</div>
-  </div>
-
-  <!-- SCROLL AREA -->
+  <div class="nav-tabs" id="main-nav" style="display:none"></div>
   <div class="scroll-area">
-
-    <!-- OVERVIEW -->
-    <div id="panel-overview" class="panel active">
-      <div class="intro-card">
-        <div class="intro-route">Spokane <span>→</span> Durango</div>
-        <div class="intro-dates">June 7 – 18, 2025 · 11 Nights · ~2,500 Miles</div>
-        <div class="intro-tags">
-          <span class="intro-tag">HOG Rally Jun 11–13</span>
-          <span class="intro-tag">Devil's Highway</span>
-          <span class="intro-tag">Million Dollar Hwy</span>
-          <span class="intro-tag">Monument Valley</span>
-          <span class="intro-tag">Zion NP</span>
-          <span class="intro-tag">Road Glide</span>
-        </div>
-      </div>
-
-      <div class="stat-grid">
-        <div class="stat"><div class="stat-label">Total Miles</div><div class="stat-val">~2,500</div></div>
-        <div class="stat"><div class="stat-label">Nights Out</div><div class="stat-val">11</div></div>
-        <div class="stat"><div class="stat-label">Rally Days</div><div class="stat-val">3</div></div>
-        <div class="stat"><div class="stat-label">Max/Day</div><div class="stat-val">390<div class="stat-sub">miles</div></div></div>
-        <div class="stat"><div class="stat-label">Daily Budget</div><div class="stat-val">$200</div></div>
-        <div class="stat"><div class="stat-label">Est. Total</div><div class="stat-val">$2.4k</div></div>
-      </div>
-
-      <div class="timeline">
-        <div class="tleg" style="flex:4;background:#92600a;color:#fef3c7">Jun 7–10 ↓</div>
-        <div class="tleg" style="flex:4;background:#14532d;color:#d1fae5">Jun 10–13</div>
-        <div class="tleg" style="flex:5;background:#78350f;color:#fef3c7">Jun 14–18 ↑</div>
-      </div>
-
-      <div class="section-header">Trip Highlights</div>
-      <div class="tip good"><strong>Devil's Highway (US-491)</strong> — Rides through Blanding → Bluff → Cortez into Durango on Day 4. Remote red canyon walls, almost no traffic, high desert at its finest.</div>
-      <div class="tip info"><strong>Million Dollar Highway (US-550)</strong> — Rally Day 1. Ride north to Ouray first, then southbound back through Silverton. Mountain wall on your left all the way down Red Mountain Pass (11,018 ft).</div>
-      <div class="tip good"><strong>Monument Valley</strong> — First night of the return. Dedicated overnight so you catch golden hour on the Mittens and ride the 17-mile valley drive.</div>
-      <div class="tip info"><strong>Zion NP</strong> — UT-9 through the canyon on the return. The canyon walls from the saddle are jaw-dropping. $35 entry covered by America the Beautiful pass.</div>
-      <div class="tip critical"><strong>Book NOW</strong> — Moab Best Western, Best Western View of Lake Powell (Page), and Goulding's Lodge (Monument Valley) all fill up in June. Don't wait.</div>
-      <div class="tip critical"><strong>Zion Timed Entry</strong> — Check recreation.gov for advance permits. Required in peak season.</div>
-      <div class="tip critical"><strong>Notify your bank</strong> — Flag WA, ID, UT, CO, AZ, NV or your card may get blocked at a remote fuel pump in Navajo Nation with no cell service.</div>
+    <div id="view-home" class="panel active" style="padding-top:14px">
+      <div id="trip-list"></div>
+      <button class="add-row-btn" id="btn-new-trip">+ Plan a New Trip</button>
     </div>
+    <div id="panel-overview" class="panel"></div>
+    <div id="panel-down" class="panel"></div>
+    <div id="panel-durango" class="panel"></div>
+    <div id="panel-return" class="panel"></div>
+    <div id="panel-checklist" class="panel"></div>
+  </div>
+  <div class="bottom-nav" id="bottom-nav" style="display:none">
+    <div class="bnav-item" data-main="overview"><div class="bnav-icon">◎</div><div class="bnav-label">Overview</div></div>
+    <div class="bnav-item" data-main="down"><div class="bnav-icon">↓</div><div class="bnav-label">Down</div></div>
+    <div class="bnav-item" data-main="durango"><div class="bnav-icon">⬡</div><div class="bnav-label">Base</div></div>
+    <div class="bnav-item" data-main="return"><div class="bnav-icon">↑</div><div class="bnav-label">Return</div></div>
+    <div class="bnav-item" data-main="checklist"><div class="bnav-icon">✓</div><div class="bnav-label">Checklist</div></div>
+  </div>
+</div>
 
-    <!-- RIDE DOWN -->
-    <div id="panel-down" class="panel">
-      <div class="section-header">Ride Down · Jun 7–10</div>
-
-      <!-- Day 1 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Sat Jun 7</div>
-          <div class="day-title">Spokane → Boise</div>
-          <div class="day-miles">~340 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#60a5fa"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Spokane — early start, top off</div><div class="stop-note">South on US-195 through the Palouse. Rolling wheat fields, easy warm-up miles.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#60a5fa"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Lewiston / Clarkston — fuel + break</div><div class="stop-note">Snake River canyon views. Hells Gate State Park overlook.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#60a5fa"></div></div>
-              <div class="stop-content"><div class="stop-name">Boise, ID — overnight</div><div class="stop-note">Good food downtown. Early night.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western Plus Airport Inn · est. $90–120 · Food + fuel ~$75</div>
-        </div>
-      </div>
-
-      <!-- Day 2 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Sun Jun 8</div>
-          <div class="day-title">Boise → Salt Lake City</div>
-          <div class="day-miles">~340 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Twin Falls — Shoshone Falls <span class="badge b-scenic">stop</span></div><div class="stop-note">"Niagara of the West." $5 park entry. Worth it.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Pocatello — fuel + lunch</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div></div>
-              <div class="stop-content"><div class="stop-name">Salt Lake City, UT — overnight</div><div class="stop-note">Temple Square is a quick evening walk.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western Plus CottonTree Inn, Murray · est. $100–130</div>
-        </div>
-      </div>
-
-      <!-- Day 3 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Mon Jun 9</div>
-          <div class="day-title">SLC → Moab <span class="badge b-scenic">scenic</span></div>
-          <div class="day-miles">~240 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Price, UT — fuel</div><div class="stop-note">Castle Valley opens up. Landscape goes wild here.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Green River, UT — lunch</div><div class="stop-note">John Wesley Powell River History Museum (~$4).</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div></div>
-              <div class="stop-content"><div class="stop-name">Moab, UT — overnight</div><div class="stop-note">Short day = time to cruise past Arches NP, catch Delicate Arch viewpoint at sunset.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western Plus Canyonlands Inn · est. $140–170 · BOOK NOW — June sells out</div>
-        </div>
-      </div>
-
-      <!-- Day 4 -->
-      <div class="day-card" style="border-left:3px solid #ef4444">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Tue Jun 10</div>
-          <div class="day-title">Moab → Durango <span class="badge b-devil">Devil's Hwy</span></div>
-          <div class="day-miles">~270 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#ef4444"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Monticello, UT — fuel <span class="badge b-warn">fill up</span></div><div class="stop-note">Last easy fuel before Devil's Highway begins.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#ef4444"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Blanding → Bluff, UT — US-491 South <span class="badge b-devil">US-491</span></div><div class="stop-note">Red canyon walls, wide open high desert, almost no traffic. Bears Ears country. This is the good stuff.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#ef4444"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Cortez, CO — fuel + lunch</div><div class="stop-note">Mesa Verde NP is 10 mi east — quick detour if energy allows.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#ef4444"></div></div>
-              <div class="stop-content"><div class="stop-name">Durango, CO — arrive <span class="badge b-rest">arrival day</span></div><div class="stop-note">Check in, walk Main Ave. Steamworks Brewing for dinner. Scout rally registration.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western Durango Inn & Suites · Ask about HOG rally block rates · Book ASAP</div>
-        </div>
-      </div>
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-trip">
+  <div class="modal">
+    <div class="modal-title" id="modal-trip-title">New Trip</div>
+    <div class="field-label">Trip Name</div><input class="edit-field" id="nt-name" placeholder="Spokane → Durango">
+    <div class="field-label">From</div><input class="edit-field" id="nt-from" placeholder="Starting city">
+    <div class="field-label">To</div><input class="edit-field" id="nt-to" placeholder="Destination">
+    <div class="field-row">
+      <div style="flex:1"><div class="field-label">Start Date</div><input class="edit-field" id="nt-start" placeholder="Jun 7, 2025"></div>
+      <div style="flex:1"><div class="field-label">End Date</div><input class="edit-field" id="nt-end" placeholder="Jun 18, 2025"></div>
     </div>
-
-    <!-- DURANGO -->
-    <div id="panel-durango" class="panel">
-      <div class="section-header">Durango · Jun 10–13</div>
-
-      <div class="hl-card">
-        <div class="hl-card-header" onclick="toggleHl(this)">
-          <div class="hl-title">Jun 10 — Arrival & Rest Day</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="hl-body">
-          <div class="stops" style="padding-top:10px">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:var(--amber)"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Check in, unpack, stretch</div><div class="stop-note">Walk Durango's historic Main Ave. Steamworks Brewing or Carver's for dinner.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:var(--amber)"></div></div>
-              <div class="stop-content"><div class="stop-name">Scout rally registration location</div><div class="stop-note">Early start on Jun 11 — know where you're going.</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hl-card">
-        <div class="hl-card-header" onclick="toggleHl(this)">
-          <div class="hl-title">Jun 11 — Rally Day 1 · Million Dollar Highway <span class="badge b-mdh">US-550</span></div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="hl-body">
-          <div class="stops" style="padding-top:10px">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#a78bfa"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Durango → Ouray, northbound first</div><div class="stop-note">US-550 north through the canyon. Dramatic but the cliff exposure is on your left — no big deal going up.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#a78bfa"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Ouray — "Switzerland of America"</div><div class="stop-note">Box Canyon waterfall. Hot springs if you want to soak. Lunch here.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#a78bfa"></div></div>
-              <div class="stop-content"><div class="stop-name">Ouray → Silverton → Durango, southbound <span class="badge b-mdh">money direction</span></div><div class="stop-note">Mountain wall on your LEFT. Cliff drop on your RIGHT (outside). This is what you wanted. Red Mountain Pass at 11,018 ft. Fuel in Silverton.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">~150 mi round trip · Full rally evening activities</div>
-        </div>
-      </div>
-
-      <div class="hl-card">
-        <div class="hl-card-header" onclick="toggleHl(this)">
-          <div class="hl-title">Jun 12 — Rally Day 2 · Mesa Verde + Wolf Creek</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="hl-body">
-          <div class="stops" style="padding-top:10px">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Mesa Verde NP — morning ride west</div><div class="stop-note">35 mi from Durango on US-160. Ancient Pueblo cliff dwellings. America the Beautiful pass covers entry.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Back to Durango — midday rally activities</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div></div>
-              <div class="stop-content"><div class="stop-name">Optional: Wolf Creek Pass afternoon ride</div><div class="stop-note">US-160 east over the Continental Divide at 10,850 ft. Stunning and short (~60 mi each way).</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="hl-card">
-        <div class="hl-card-header" onclick="toggleHl(this)">
-          <div class="hl-title">Jun 13 — Rally Day 3 · Closing Day</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="hl-body">
-          <div class="stops" style="padding-top:10px">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:var(--amber)"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Follow rally schedule — group rides, awards, events</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:var(--amber)"></div></div>
-              <div class="stop-content"><div class="stop-name">Pack and prep for early departure Jun 14</div><div class="stop-note">Fuel up the night before. Monument Valley day is short — but early start for golden hour light.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Stay Durango all 4 nights (Jun 10–13) · ~$140–180/night</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RETURN -->
-    <div id="panel-return" class="panel">
-      <div class="section-header">Return Loop · Jun 14–18</div>
-
-      <!-- Day R1 -->
-      <div class="day-card" style="border-left:3px solid var(--amber)">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Sat Jun 14</div>
-          <div class="day-title">Durango → Monument Valley <span class="badge b-scenic">iconic</span></div>
-          <div class="day-miles">~160 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Cortez, CO — fuel</div><div class="stop-note">Last reliable fuel before Navajo Nation stretch.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Four Corners Monument <span class="badge b-scenic">photo stop</span></div><div class="stop-note">Stand in 4 states · $8 entry · mandatory.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Kayenta, AZ — fuel <span class="badge b-warn">critical</span></div><div class="stop-note">Do NOT skip. Last station before Monument Valley.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#fb923c"></div></div>
-              <div class="stop-content"><div class="stop-name">Monument Valley — arrive early afternoon</div><div class="stop-note">Short day = maximum time here. 17-mile valley drive (packed dirt, fine on the Road Glide). The Mittens at golden hour. One of those moments.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Goulding's Lodge or Best Western Kayenta · est. $120–160 · Book early</div>
-        </div>
-      </div>
-
-      <!-- Day R2 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Sun Jun 15</div>
-          <div class="day-title">Monument Valley → Page, AZ</div>
-          <div class="day-miles">~120 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#f59e0b"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Mexican Hat, UT — fuel + photo</div><div class="stop-note">Rock formation looks exactly like a sombrero. Quick and worth it.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#f59e0b"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Natural Bridges NM <span class="badge b-scenic">detour</span></div><div class="stop-note">~30 mi via UT-261. Three massive sandstone bridges, 9-mile scenic loop. America the Beautiful covers it.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#f59e0b"></div></div>
-              <div class="stop-content"><div class="stop-name">Page, AZ — overnight</div><div class="stop-note">Horseshoe Bend walk at dusk (~1.5 mi). Antelope Canyon if pre-booked (~$60).</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western View of Lake Powell · est. $130–160 · Book early</div>
-        </div>
-      </div>
-
-      <!-- Day R3 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Mon Jun 16</div>
-          <div class="day-title">Page → Zion → St. George <span class="badge b-scenic">scenic</span></div>
-          <div class="day-miles">~200 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Kanab, UT — fuel + lunch</div><div class="stop-note">"Little Hollywood" — old western film town.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Zion NP — UT-9 through the canyon <span class="badge b-scenic">canyon ride</span></div><div class="stop-note">Zion-Mt. Carmel Tunnel — Road Glide is fine. $35 entry (ATB pass). Canyon walls from the saddle are jaw-dropping.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#22c55e"></div></div>
-              <div class="stop-content"><div class="stop-name">St. George, UT — overnight</div><div class="stop-note">Easy day. Good food, explore the red rock.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western Plus Abbey Inn, St. George · est. $110–140</div>
-        </div>
-      </div>
-
-      <!-- Day R4 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Tue Jun 17</div>
-          <div class="day-title">St. George → Winnemucca, NV</div>
-          <div class="day-miles">~380 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#888"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">I-15 N → I-80 W through Nevada</div><div class="stop-note">High desert basin and range country. Wide open throttle.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#888"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Wells, NV — fuel</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#888"></div></div>
-              <div class="stop-content"><div class="stop-name">Winnemucca, NV — overnight</div><div class="stop-note">Right mileage break. Casinos have cheap food. Unglamorous but correct.</div></div>
-            </div>
-          </div>
-          <div class="hotel-row">🏨 Best Western Gold Country Inn · est. $90–110</div>
-        </div>
-      </div>
-
-      <!-- Day R5 -->
-      <div class="day-card">
-        <div class="day-card-header" onclick="toggleDay(this)">
-          <div class="day-date">Wed Jun 18</div>
-          <div class="day-title">Winnemucca → Spokane 🏠</div>
-          <div class="day-miles">~390 mi</div>
-          <div class="day-chevron">▼</div>
-        </div>
-        <div class="day-body">
-          <div class="stops">
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#a78bfa"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">I-80 W → US-95 N → US-395 N → Spokane</div><div class="stop-note">Or US-20 → US-395 through Oregon high desert for more scenery.</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:#a78bfa"></div><div class="stop-line"></div></div>
-              <div class="stop-content"><div class="stop-name">Ontario, OR — fuel</div></div>
-            </div>
-            <div class="stop">
-              <div class="stop-left"><div class="stop-dot" style="background:var(--amber)"></div></div>
-              <div class="stop-content"><div class="stop-name">Spokane, WA — Home</div><div class="stop-note">~6 hrs of riding. Comfortable finish. Welcome back.</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CHECKLIST -->
-    <div id="panel-checklist" class="panel">
-      <div class="progress-wrap">
-        <div class="progress-row">
-          <div class="progress-label" id="prog-label">0 of 0 checked</div>
-          <button class="reset-btn" onclick="resetChecks()">Reset</button>
-        </div>
-        <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
-      </div>
-
-      <div class="check-tabs" id="check-tabs">
-        <div class="check-tab active" onclick="showCheck('bike',this)">Bike</div>
-        <div class="check-tab" onclick="showCheck('gear',this)">Gear</div>
-        <div class="check-tab" onclick="showCheck('pack',this)">Packing</div>
-        <div class="check-tab" onclick="showCheck('admin',this)">Admin</div>
-        <div class="check-tab" onclick="showCheck('daily',this)">Daily</div>
-      </div>
-
-      <!-- BIKE -->
-      <div id="check-bike" class="check-panel active">
-        <div class="check-section">
-          <div class="check-section-label">1–2 weeks before departure</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Full service if due within 2,500 miles</div><div class="check-note">Oil, filter, plugs — don't do it in Durango</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Tire inspection — tread + age <span class="badge b-critical">critical</span></div><div class="check-note">Replace anything questionable. 2,500 mi on hot asphalt is no gamble.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Tire pressure set to spec</div><div class="check-note">Road Glide: ~36 psi front / 40 psi rear cold — verify your manual</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Brake pads — front and rear <span class="badge b-critical">critical</span></div><div class="check-note">MDH descents will work these hard</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Brake fluid level and condition</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Drive belt inspection</div><div class="check-note">Check for cracks or fraying</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">All lights — headlight, brake, signals</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Battery load test</div><div class="check-note">If 3+ years old, test it. Heat kills batteries.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Throttle, clutch, brake — smooth operation</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Air filter inspection</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Saddlebag latches and mounts secure</div><div class="check-note">Check torque on luggage rack bolts</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Windshield secure, no stress cracks</div></div></div>
-        </div>
-        <div class="check-section">
-          <div class="check-section-label">Emergency kit (on the bike)</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Tire plug kit + CO2 inflators <span class="badge b-critical">critical</span></div><div class="check-note">Nearest dealer could be 100+ mi in canyon country</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Compact 12V mini pump</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Basic tool roll — hex keys, screwdrivers, pliers, zip ties</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Duct tape (small roll)</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Spare fuses — Road Glide spec</div></div></div>
-        </div>
-      </div>
-
-      <!-- GEAR -->
-      <div id="check-gear" class="check-panel">
-        <div class="check-section">
-          <div class="check-section-label">Riding gear</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Helmet — inspected, no cracks <span class="badge b-critical">critical</span></div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Riding jacket with CE armor</div><div class="check-note">Mesh for desert heat, bring a liner for MDH at 11,000 ft</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Summer vented gloves</div><div class="check-note">Plus warmer pair for high passes — Ouray mornings hit the 40s</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Riding boots — ankle protection</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Riding pants with knee/hip armor</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Rain gear — jacket AND pants <span class="badge b-critical">critical</span></div><div class="check-note">Colorado afternoon monsoons appear in 20 min. Keep accessible, not buried.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Base layers — moisture wicking, not cotton</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Balaclava or neck gaiter</div><div class="check-note">Red Mountain Pass can be 30°F cooler than Durango</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Sunglasses / tinted visor</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Cooling vest or evaporative neck wrap <span class="badge b-nice">nice to have</span></div><div class="check-note">Game changer at Monument Valley and Page at 100°F+</div></div></div>
-        </div>
-        <div class="check-section">
-          <div class="check-section-label">Comms & comfort</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Bluetooth communicator — charged and paired</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Phone mount — secure, tested</div><div class="check-note">Ram Mount or similar. Test on a bump before the trip.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">USB charger / power outlet on bike — working</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Earplugs — foam, pack a dozen pairs</div><div class="check-note">2,500 miles of wind noise. Use them even with a communicator.</div></div></div>
-        </div>
-      </div>
-
-      <!-- PACKING -->
-      <div id="check-pack" class="check-panel">
-        <div class="check-section">
-          <div class="check-section-label">Clothing (pack light)</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">5–6 days of riding base layers</div><div class="check-note">Quick-dry synthetics. Plan to do laundry once in Durango.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">2–3 casual outfits for evenings</div><div class="check-note">Jeans + HOG shirts covers most rally situations</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Swimsuit</div><div class="check-note">Ouray hot springs, Lake Powell area</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Light fleece or hoodie</div><div class="check-note">Durango evenings cool fast at 6,500 ft</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Comfortable walking shoes</div><div class="check-note">Horseshoe Bend, Monument Valley, Arches</div></div></div>
-        </div>
-        <div class="check-section">
-          <div class="check-section-label">Health & hydration</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Sunscreen SPF 50+ — large tube <span class="badge b-critical">critical</span></div><div class="check-note">High altitude + desert UV. Reapply every 2 hours.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Lip balm with SPF</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Electrolyte packets — 20+ <span class="badge b-critical">critical</span></div><div class="check-note">Nuun, Liquid IV. One per day minimum in desert heat.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">2L water capacity on the bike</div><div class="check-note">Don't rely on finding water in Navajo Nation</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Ibuprofen / Tylenol</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Antacids / Pepto</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Prescription meds — full trip + 3 days extra</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">First aid kit — compact</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Hand sanitizer + wet wipes</div><div class="check-note">Some Navajo Nation fuel stops have no running water</div></div></div>
-        </div>
-        <div class="check-section">
-          <div class="check-section-label">Tech</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Offline maps downloaded <span class="badge b-critical">critical</span></div><div class="check-note">Download Navajo Nation + canyon country on Google Maps. Cell dies for long stretches.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Portable battery bank — 20,000 mAh+</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">All charging cables + adapters</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Camera / GoPro + mounts <span class="badge b-nice">nice to have</span></div></div></div>
-        </div>
-      </div>
-
-      <!-- ADMIN -->
-      <div id="check-admin" class="check-panel">
-        <div class="check-section">
-          <div class="check-section-label">Documents — carry physical copies</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Motorcycle registration <span class="badge b-critical">critical</span></div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Proof of insurance — physical card <span class="badge b-critical">critical</span></div><div class="check-note">Not just the app. Physical card in your wallet.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Driver's license</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Health insurance card</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">HOG membership + rally confirmation</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Hotel confirmations saved offline</div><div class="check-note">Cell unreliable in canyon country</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Emergency contact card — wallet + bike</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Roadside assistance info — HOG or AAA</div><div class="check-note">Know the number offline. No cell in Navajo Nation gaps.</div></div></div>
-        </div>
-        <div class="check-section">
-          <div class="check-section-label">Book / confirm before you leave</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">All hotels confirmed <span class="badge b-critical">critical</span></div><div class="check-note">Moab and Page especially — June oversells</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">America the Beautiful Pass purchased</div><div class="check-note">$80 at usgs.gov or any NPS entrance. Covers Arches, Zion, Mesa Verde, Natural Bridges.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Antelope Canyon tour booked (if desired)</div><div class="check-note">~$60, books weeks out in summer</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Zion timed entry permit — recreation.gov</div><div class="check-note">Required peak season. Check now.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Bank notified — WA, ID, UT, CO, AZ, NV</div><div class="check-note">Remote pump in Navajo Nation with a blocked card = bad day</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Rally registration completed</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Someone home has your full itinerary</div></div></div>
-        </div>
-      </div>
-
-      <!-- DAILY -->
-      <div id="check-daily" class="check-panel">
-        <div class="check-section">
-          <div class="check-section-label">Every morning before you ride</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">T-CLOCS walkround</div><div class="check-note">Tires · Controls · Lights · Oil · Chassis · Stands. 3 minutes.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Tire pressure — carry a gauge</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Luggage strapped — tug test</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Phone charged + offline maps loaded for today</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Rain gear accessible — not buried</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Water filled, electrolytes packed</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Sunscreen applied before suiting up</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Know today's fuel plan</div><div class="check-note">Next pump locations noted before leaving</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Check weather — especially high passes</div><div class="check-note">weather.gov mountain forecasts for MDH, Wolf Creek, Zion</div></div></div>
-        </div>
-        <div class="check-section">
-          <div class="check-section-label">High altitude reminders</div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Layer up before the pass</div><div class="check-note">Red Mountain Pass (11,018 ft) is 30°F cooler than Durango</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Engine braking awareness on descents</div><div class="check-note">Don't ride the brakes continuously on MDH. Steady application + engine braking.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Guardrail gaps on MDH — they exist</div><div class="check-note">Some sections have no barrier. Stay in your lane.</div></div></div>
-          <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-text"><div class="check-label">Altitude sickness awareness</div><div class="check-note">Headache, nausea above 8,000 ft. Drink water, go slow, don't push it.</div></div></div>
-        </div>
-      </div>
-
-    </div><!-- end checklist panel -->
-
-  </div><!-- end scroll area -->
-
-  <!-- BOTTOM NAV -->
-  <div class="bottom-nav">
-    <div class="bottom-nav-item active" onclick="showMain('overview',null);setBottomNav(this)">
-      <div class="bnav-icon">◎</div>
-      <div class="bnav-label">Overview</div>
-    </div>
-    <div class="bottom-nav-item" onclick="showMain('down',null);setBottomNav(this)">
-      <div class="bnav-icon">↓</div>
-      <div class="bnav-label">Down</div>
-    </div>
-    <div class="bottom-nav-item" onclick="showMain('durango',null);setBottomNav(this)">
-      <div class="bnav-icon">⬡</div>
-      <div class="bnav-label">Durango</div>
-    </div>
-    <div class="bottom-nav-item" onclick="showMain('return',null);setBottomNav(this)">
-      <div class="bnav-icon">↑</div>
-      <div class="bnav-label">Return</div>
-    </div>
-    <div class="bottom-nav-item" onclick="showMain('checklist',null);setBottomNav(this)">
-      <div class="bnav-icon">✓</div>
-      <div class="bnav-label">Checklist</div>
+    <div class="field-label">Tagline / Notes</div><input class="edit-field" id="nt-tag" placeholder="HOG Rally + High Desert Loop">
+    <div class="modal-actions">
+      <button class="small-btn" id="btn-cancel-trip">Cancel</button>
+      <button class="small-btn amber" id="btn-save-trip">Create Trip</button>
     </div>
   </div>
+</div>
 
-</div><!-- end app -->
+<div class="modal-overlay" id="modal-day">
+  <div class="modal">
+    <div class="modal-title" id="modal-day-title">Edit Day</div>
+    <div class="field-label">Date</div><input class="edit-field" id="ed-date" placeholder="Sat Jun 7">
+    <div class="field-label">Title</div><input class="edit-field" id="ed-title" placeholder="Spokane → Boise">
+    <div class="field-label">Miles</div><input class="edit-field" id="ed-miles" placeholder="~340 mi" style="max-width:150px">
+    <div class="field-label">Hotel / Overnight Notes</div><input class="edit-field" id="ed-hotel" placeholder="Best Western + cost">
+    <div class="field-label">Stops</div>
+    <div id="ed-stops"></div>
+    <button class="add-row-btn" id="ed-add-stop">+ Add Stop</button>
+    <div class="modal-actions">
+      <button class="small-btn red" id="ed-delete">Delete Day</button>
+      <button class="small-btn" id="ed-cancel">Cancel</button>
+      <button class="small-btn amber" id="ed-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-share">
+  <div class="modal">
+    <div class="modal-title">Share This Trip</div>
+    <p style="font-size:13px;color:var(--smoke);line-height:1.6">Share this link with your group. Each person gets their own checklist that saves to their own device.</p>
+    <div class="share-url" id="share-url"></div>
+    <div class="modal-actions">
+      <button class="small-btn" id="btn-close-share">Close</button>
+      <button class="small-btn amber" id="btn-copy-link">Copy Link</button>
+    </div>
+  </div>
+</div>
 
 <script>
-const STORAGE_KEY = 'rn_trip_checks_v1';
+(function(){
+'use strict';
 
-// MAIN NAV
-function showMain(id, tabEl) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
-  if (tabEl) {
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    tabEl.classList.add('active');
+// ── Storage ───────────────────────────────────────────────
+var _m={};
+var S={
+  get:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return _m[k]||null}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){_m[k]=v}},
+  del:function(k){try{localStorage.removeItem(k)}catch(e){delete _m[k]}}
+};
+
+// ── Default trip ──────────────────────────────────────────
+var DT={
+  id:'brad-durango-2025',
+  name:'Spokane → Durango',from:'Spokane, WA',to:'Durango, CO',
+  startDate:'Jun 7, 2025',endDate:'Jun 18, 2025',
+  tagline:'HOG Rally · Devil\'s Highway · Monument Valley',
+  totalMiles:'~2,500',nights:11,budget:'$200/day',
+  sections:[
+    {id:'down',label:'Ride Down',icon:'↓',days:[
+      {id:'d1',date:'Sat Jun 7',title:'Spokane → Boise',miles:'~340 mi',hotel:"Best Western Plus Airport Inn, Boise · est. $90–120 · Food + fuel ~$75",
+       stops:[{n:'Spokane — early start, top off',t:"South on US-195 through the Palouse. Easy warm-up miles.",c:'#60a5fa'},
+              {n:'Lewiston / Clarkston — fuel + break',t:'Snake River canyon overlook.',c:'#60a5fa'},
+              {n:'Boise, ID — overnight',t:'Good food downtown. Early night.',c:'#60a5fa'}]},
+      {id:'d2',date:'Sun Jun 8',title:'Boise → Salt Lake City',miles:'~340 mi',hotel:"Best Western Plus CottonTree Inn, Murray · est. $100–130",
+       stops:[{n:'Twin Falls — Shoshone Falls',t:'"Niagara of the West." $5 park entry. Worth it.',c:'#22c55e'},
+              {n:'Pocatello — fuel + lunch',t:'',c:'#22c55e'},
+              {n:'Salt Lake City, UT — overnight',t:'Temple Square is a quick evening walk.',c:'#22c55e'}]},
+      {id:'d3',date:'Mon Jun 9',title:'SLC → Moab',miles:'~240 mi',hotel:"Best Western Plus Canyonlands Inn · est. $140–170 · BOOK NOW",
+       stops:[{n:'Price, UT — fuel',t:'Castle Valley opens up. Landscape goes wild.',c:'#fb923c'},
+              {n:'Green River, UT — lunch',t:'John Wesley Powell River History Museum (~$4).',c:'#fb923c'},
+              {n:'Moab, UT — overnight',t:'Cruise past Arches NP. Delicate Arch viewpoint at sunset.',c:'#fb923c'}]},
+      {id:'d4',date:'Tue Jun 10',title:"Moab → Durango via Devil's Highway",miles:'~270 mi',hotel:"Best Western Durango Inn & Suites · Ask about HOG rally rates · BOOK ASAP",
+       stops:[{n:'Monticello, UT — fuel',t:"Last easy fuel before Devil's Highway begins.",c:'#ef4444'},
+              {n:"Blanding → Bluff — US-491 South (Devil's Hwy)",t:'Red canyon walls, open high desert, Bears Ears country.',c:'#ef4444'},
+              {n:'Cortez, CO — fuel + lunch',t:'Mesa Verde NP is 10 mi east if you have energy.',c:'#ef4444'},
+              {n:'Durango, CO — arrive',t:'Check in, walk Main Ave. Steamworks Brewing for dinner.',c:'#ef4444'}]}
+    ]},
+    {id:'durango',label:'Durango',icon:'⬡',days:[
+      {id:'r0',date:'Jun 10',title:'Arrival & Rest Day',miles:'',hotel:'Stay Durango all 4 nights (Jun 10–13) · est. $140–180/night',
+       stops:[{n:'Check in, unpack, stretch',t:"Walk Main Ave. Steamworks Brewing or Carver's for dinner.",c:'#f59e0b'},
+              {n:'Scout rally registration',t:'Early start Jun 11 — know where you\'re going.',c:'#f59e0b'}]},
+      {id:'r1',date:'Jun 11',title:'Rally Day 1 · Million Dollar Highway',miles:'~150 mi round trip',hotel:'',
+       stops:[{n:'Durango → Ouray, northbound first',t:'US-550 north. Warm-up — cliff on your left going up, no big deal.',c:'#a78bfa'},
+              {n:'Ouray — lunch + hot springs',t:'"Switzerland of America." Box Canyon waterfall.',c:'#a78bfa'},
+              {n:'Ouray → Silverton → Durango, southbound',t:'Mountain wall on LEFT, cliff on RIGHT. Red Mountain Pass 11,018 ft. The money direction.',c:'#a78bfa'}]},
+      {id:'r2',date:'Jun 12',title:'Rally Day 2 · Mesa Verde + Wolf Creek',miles:'',hotel:'',
+       stops:[{n:'Mesa Verde NP — morning ride',t:'35 mi west on US-160. Ancient cliff dwellings. ATB pass covers entry.',c:'#22c55e'},
+              {n:'Durango — midday rally activities',t:'',c:'#22c55e'},
+              {n:'Optional: Wolf Creek Pass',t:'US-160 east over Continental Divide at 10,850 ft.',c:'#22c55e'}]},
+      {id:'r3',date:'Jun 13',title:'Rally Day 3 · Closing Day',miles:'',hotel:'',
+       stops:[{n:'Follow rally schedule',t:'Group rides, awards, events.',c:'#f59e0b'},
+              {n:'Pack + prep for early departure',t:'Fuel up the night before. Monument Valley day needs an early start.',c:'#f59e0b'}]}
+    ]},
+    {id:'return',label:'Return',icon:'↑',days:[
+      {id:'b1',date:'Sat Jun 14',title:'Durango → Monument Valley',miles:'~160 mi',hotel:"Goulding's Lodge or Best Western Kayenta · est. $120–160 · Book early",
+       stops:[{n:'Cortez, CO — fuel',t:'Last reliable fuel before Navajo Nation.',c:'#fb923c'},
+              {n:'Four Corners Monument',t:'Stand in 4 states · $8 entry.',c:'#fb923c'},
+              {n:'Kayenta, AZ — fuel',t:'DO NOT SKIP. Last station before Monument Valley.',c:'#ef4444'},
+              {n:'Monument Valley — arrive early afternoon',t:'17-mile valley drive. The Mittens at golden hour. One of those moments.',c:'#fb923c'}]},
+      {id:'b2',date:'Sun Jun 15',title:'Monument Valley → Page, AZ',miles:'~120 mi',hotel:'Best Western View of Lake Powell · est. $130–160 · Book early',
+       stops:[{n:'Mexican Hat, UT — fuel + photo',t:'Rock formation looks exactly like a sombrero.',c:'#f59e0b'},
+              {n:'Natural Bridges NM',t:'~30 mi detour via UT-261. Three massive sandstone bridges. ATB pass covers it.',c:'#f59e0b'},
+              {n:'Page, AZ — overnight',t:'Horseshoe Bend at dusk (~1.5 mi walk). Antelope Canyon if pre-booked.',c:'#f59e0b'}]},
+      {id:'b3',date:'Mon Jun 16',title:'Page → Zion → St. George',miles:'~200 mi',hotel:'Best Western Plus Abbey Inn, St. George · est. $110–140',
+       stops:[{n:'Kanab, UT — fuel + lunch',t:'"Little Hollywood" — old western film town.',c:'#22c55e'},
+              {n:'Zion NP — UT-9 through the canyon',t:'Road Glide is fine in the tunnel. Canyon walls from the saddle are jaw-dropping.',c:'#22c55e'},
+              {n:'St. George, UT — overnight',t:'Easy day. Good food, red rock everywhere.',c:'#22c55e'}]},
+      {id:'b4',date:'Tue Jun 17',title:'St. George → Winnemucca, NV',miles:'~380 mi',hotel:'Best Western Gold Country Inn, Winnemucca · est. $90–110',
+       stops:[{n:'I-15 N → I-80 W through Nevada',t:'High desert basin and range. Wide open throttle.',c:'#888'},
+              {n:'Wells, NV — fuel',t:'',c:'#888'},
+              {n:'Winnemucca, NV — overnight',t:'Right mileage break. Casino food is cheap. Unglamorous but correct.',c:'#888'}]},
+      {id:'b5',date:'Wed Jun 18',title:'Winnemucca → Spokane 🏠',miles:'~390 mi',hotel:'',
+       stops:[{n:'I-80 W → US-95 N → US-395 N',t:'Or US-20 → US-395 through Oregon high desert.',c:'#a78bfa'},
+              {n:'Ontario, OR — fuel',t:'',c:'#a78bfa'},
+              {n:'Spokane, WA — Home',t:'~6 hrs riding. Welcome back.',c:'#f59e0b'}]}
+    ]}
+  ],
+  checklist:{
+    bike:[
+      {section:'1–2 weeks before',items:[
+        {l:'Full service if due within 2,500 miles',n:"Oil, filter, plugs — don't do it in Durango"},
+        {l:'Tire inspection — tread + age',n:'Replace anything questionable.',x:true},
+        {l:'Tire pressure set to spec',n:'Road Glide: ~36 front / 40 rear psi cold'},
+        {l:'Brake pads — front and rear',n:'MDH descents will work these hard.',x:true},
+        {l:'Brake fluid level and condition',n:''},
+        {l:'Drive belt inspection',n:'Check for cracks or fraying'},
+        {l:'All lights working',n:'Headlight, brake, signals'},
+        {l:'Battery load test',n:'If 3+ years old, test it. Heat kills batteries.'},
+        {l:'Saddlebag latches and mounts secure',n:'Check torque on luggage rack bolts'}
+      ]},
+      {section:'Emergency kit on the bike',items:[
+        {l:'Tire plug kit + CO2 inflators',n:'Nearest dealer could be 100+ mi in canyon country.',x:true},
+        {l:'Compact 12V mini pump',n:''},
+        {l:'Basic tool roll',n:'Hex keys, screwdrivers, pliers, zip ties'},
+        {l:'Duct tape (small roll)',n:''},
+        {l:'Spare fuses — Road Glide spec',n:''}
+      ]}
+    ],
+    gear:[
+      {section:'Riding gear',items:[
+        {l:'Helmet — inspected, no cracks',n:'',x:true},
+        {l:'Riding jacket with CE armor',n:'Mesh for desert heat, liner for MDH at 11,000 ft'},
+        {l:'Summer vented gloves',n:'Plus warmer pair — Ouray mornings hit the 40s'},
+        {l:'Riding boots — ankle protection',n:''},
+        {l:'Riding pants with armor',n:''},
+        {l:'Rain gear — jacket AND pants',n:'Colorado monsoons appear in 20 min. Keep accessible.',x:true},
+        {l:'Base layers — moisture wicking, not cotton',n:''},
+        {l:'Balaclava or neck gaiter',n:'Red Mountain Pass is 30°F cooler than Durango'},
+        {l:'Sunglasses / tinted visor',n:''}
+      ]},
+      {section:'Comms + comfort',items:[
+        {l:'Bluetooth communicator — charged + paired',n:''},
+        {l:'Phone mount — secure, tested',n:'Test on a bump before the trip'},
+        {l:'USB charger on bike — working',n:''},
+        {l:'Earplugs — foam, dozen pairs',n:'2,500 miles of wind noise. Use them.'}
+      ]}
+    ],
+    pack:[
+      {section:'Clothing',items:[
+        {l:'5–6 days riding base layers',n:'Quick-dry synthetics. Do laundry in Durango.'},
+        {l:'2–3 casual outfits for evenings',n:'Jeans + HOG shirts covers most situations'},
+        {l:'Swimsuit',n:'Ouray hot springs, Lake Powell area'},
+        {l:'Light fleece or hoodie',n:'Durango evenings cool fast at 6,500 ft'},
+        {l:'Comfortable walking shoes',n:'Horseshoe Bend, Monument Valley, Arches'}
+      ]},
+      {section:'Health + hydration',items:[
+        {l:'Sunscreen SPF 50+ — large tube',n:'High altitude + desert UV. Reapply every 2 hrs.',x:true},
+        {l:'Lip balm with SPF',n:''},
+        {l:'Electrolyte packets — 20+',n:'Nuun, Liquid IV. One per day minimum.',x:true},
+        {l:'2L water on the bike',n:"Don't rely on finding water in Navajo Nation"},
+        {l:'Ibuprofen / Tylenol',n:''},
+        {l:'Prescription meds — full trip + 3 days extra',n:''},
+        {l:'First aid kit — compact',n:''},
+        {l:'Hand sanitizer + wet wipes',n:'Some Navajo Nation fuel stops have no running water'}
+      ]},
+      {section:'Tech',items:[
+        {l:'Offline maps downloaded',n:'Navajo Nation + canyon country. Cell dies out there.',x:true},
+        {l:'Portable battery bank — 20,000 mAh+',n:''},
+        {l:'All charging cables + adapters',n:''},
+        {l:'Camera / GoPro + mounts',n:''}
+      ]}
+    ],
+    admin:[
+      {section:'Documents — carry physical copies',items:[
+        {l:'Motorcycle registration',n:'',x:true},
+        {l:'Proof of insurance — physical card',n:'Not just the app.',x:true},
+        {l:"Driver's license",n:''},
+        {l:'Health insurance card',n:''},
+        {l:'HOG membership + rally confirmation',n:''},
+        {l:'Hotel confirmations saved offline',n:'Cell unreliable in canyon country'},
+        {l:'Emergency contact card',n:'Wallet + on the bike'},
+        {l:'Roadside assistance info',n:'HOG or AAA — know the number offline'}
+      ]},
+      {section:'Book before you leave',items:[
+        {l:'All hotels confirmed',n:'Moab and Page especially — June oversells.',x:true},
+        {l:'America the Beautiful Pass purchased',n:'$80 at usgs.gov — covers Arches, Zion, Mesa Verde, Natural Bridges'},
+        {l:'Antelope Canyon tour booked (if desired)',n:'~$60 — books weeks out in summer'},
+        {l:'Zion timed entry permit',n:'Check recreation.gov — required in peak season.',x:true},
+        {l:'Bank notified — WA, ID, UT, CO, AZ, NV',n:'Remote pump in Navajo Nation with blocked card = very bad day'},
+        {l:'Rally registration completed',n:''},
+        {l:'Someone home has your full itinerary',n:''}
+      ]}
+    ],
+    daily:[
+      {section:'Every morning before you ride',items:[
+        {l:'T-CLOCS walkround',n:'Tires · Controls · Lights · Oil · Chassis · Stands. 3 min.'},
+        {l:'Tire pressure — carry a gauge',n:''},
+        {l:'Luggage strapped — tug test',n:''},
+        {l:'Phone charged + offline maps loaded for today',n:''},
+        {l:'Rain gear accessible — not buried',n:''},
+        {l:'Water filled, electrolytes packed',n:''},
+        {l:'Sunscreen applied before suiting up',n:''},
+        {l:"Know today's fuel plan",n:'Next pump locations noted before leaving'},
+        {l:'Check weather — especially high passes',n:'weather.gov mountain forecasts'}
+      ]},
+      {section:'High altitude reminders',items:[
+        {l:'Layer up before the pass',n:'Red Mountain Pass (11,018 ft) is 30°F cooler than Durango'},
+        {l:'Engine braking awareness on descents',n:"Don't ride the brakes continuously on MDH."},
+        {l:'Guardrail gaps on MDH — they exist',n:'Some sections have no barrier. Stay in your lane.'},
+        {l:'Altitude sickness awareness',n:'Headache, nausea above 8,000 ft. Drink water, go slow.'}
+      ]}
+    ]
   }
-  // sync bottom nav
-  const map = {overview:0,down:1,durango:2,return:3,checklist:4};
-  const items = document.querySelectorAll('.bottom-nav-item');
-  items.forEach(i => i.classList.remove('active'));
-  if (map[id] !== undefined) items[map[id]].classList.add('active');
-  // sync top nav
-  const tabs = document.querySelectorAll('.nav-tab');
-  const order = ['overview','down','durango','return','checklist'];
-  const idx = order.indexOf(id);
-  tabs.forEach(t => t.classList.remove('active'));
-  if (idx >= 0) tabs[idx].classList.add('active');
+};
+
+// ── State ─────────────────────────────────────────────────
+var ST={view:'home',tripId:null,tab:'overview',checkTab:'bike',editSecIdx:-1,editDayIdx:-1};
+
+// ── Trip CRUD ─────────────────────────────────────────────
+function getTrips(){return S.get('rn_trips')||[];}
+function saveTrips(t){S.set('rn_trips',t);}
+function getTD(id){return S.get('rn_td_'+id);}
+function saveTD(id,d){S.set('rn_td_'+id,d);}
+function getChecks(id){return S.get('rn_ch_'+id)||{};}
+function saveChecks(id,d){S.set('rn_ch_'+id,d);}
+
+function initDefault(){
+  var trips=getTrips();
+  if(!trips.find(function(t){return t.id===DT.id;})){
+    trips.unshift({id:DT.id,name:DT.name,from:DT.from,to:DT.to,startDate:DT.startDate,endDate:DT.endDate});
+    saveTrips(trips);
+    saveTD(DT.id,JSON.parse(JSON.stringify(DT)));
+  }
 }
 
-function setBottomNav(el) {
-  document.querySelectorAll('.bottom-nav-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
+// ── URL ───────────────────────────────────────────────────
+function shareUrl(id){
+  return window.location.href.split('?')[0].split('#')[0]+'?trip='+encodeURIComponent(id);
+}
+function checkUrl(){
+  var p=new URLSearchParams(window.location.search);
+  var tid=p.get('trip');
+  if(tid&&getTD(tid)) openTrip(tid);
 }
 
-// COLLAPSIBLE DAY CARDS
-function toggleDay(header) {
-  const body = header.nextElementSibling;
-  const chev = header.querySelector('.day-chevron');
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open');
-  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+// ── Escape ────────────────────────────────────────────────
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+// ── Tap ───────────────────────────────────────────────────
+function tap(el,fn){
+  if(!el) return;
+  var t=false;
+  el.addEventListener('touchend',function(ev){t=true;ev.preventDefault();fn(ev);setTimeout(function(){t=false;},300);},{passive:false});
+  el.addEventListener('click',function(ev){if(!t)fn(ev);});
 }
 
-// HIGHLIGHT CARDS
-function toggleHl(header) {
-  const body = header.nextElementSibling;
-  const chev = header.querySelector('.day-chevron');
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open');
-  chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+// ── Panels ────────────────────────────────────────────────
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  var el=document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── Home ──────────────────────────────────────────────────
+function renderHome(){
+  ST.view='home'; ST.tripId=null;
+  document.getElementById('hdr-sub').textContent='Your Trips';
+  document.getElementById('hdr-actions').innerHTML='';
+  document.getElementById('main-nav').style.display='none';
+  document.getElementById('bottom-nav').style.display='none';
+  showPanel('view-home');
+
+  var trips=getTrips();
+  var list=document.getElementById('trip-list');
+  if(!trips.length){
+    list.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--smoke)"><div style="font-size:40px;margin-bottom:12px">🏍</div><p style="font-size:14px;line-height:1.6">No trips yet.<br>Tap below to plan your first ride.</p></div>';
+  } else {
+    list.innerHTML=trips.map(function(t){
+      return '<div class="trip-item" data-id="'+e(t.id)+'">'
+        +'<div class="trip-info"><div class="trip-name">'+e(t.name)+'</div>'
+        +'<div class="trip-meta">'+e(t.startDate)+' – '+e(t.endDate)+'</div></div>'
+        +'<div class="trip-arrow">›</div></div>';
+    }).join('');
+    list.querySelectorAll('.trip-item').forEach(function(item){
+      tap(item,function(){openTrip(item.getAttribute('data-id'));});
+    });
+  }
 }
 
-// CHECKLIST TABS
-function showCheck(id, tabEl) {
-  document.querySelectorAll('.check-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('check-' + id).classList.add('active');
-  document.querySelectorAll('.check-tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
+// ── Open trip ─────────────────────────────────────────────
+function openTrip(id){
+  var data=getTD(id); if(!data) return;
+  ST.view='trip'; ST.tripId=id;
+
+  document.getElementById('hdr-sub').textContent=data.from+' → '+data.to;
+
+  var ha=document.getElementById('hdr-actions');
+  ha.innerHTML='<button class="hbtn" id="hb-back">← Trips</button><button class="hbtn primary" id="hb-share">Share</button>';
+  tap(document.getElementById('hb-back'),function(){renderHome();});
+  tap(document.getElementById('hb-share'),function(){
+    document.getElementById('share-url').textContent=shareUrl(id);
+    openModal('modal-share');
+  });
+
+  var nav=document.getElementById('main-nav');
+  nav.style.display='flex';
+  nav.innerHTML='<div class="nav-tab" data-main="overview">Overview</div>'
+    +data.sections.map(function(s){return '<div class="nav-tab" data-main="'+s.id+'">'+e(s.label)+'</div>';}).join('')
+    +'<div class="nav-tab" data-main="checklist">Checklist</div>';
+  nav.querySelectorAll('.nav-tab').forEach(function(tab){
+    tap(tab,function(){showTab(tab.getAttribute('data-main'),data);});
+  });
+
+  var bn=document.getElementById('bottom-nav');
+  bn.style.display='flex';
+  bn.innerHTML='<div class="bnav-item" data-main="overview"><div class="bnav-icon">◎</div><div class="bnav-label">Overview</div></div>'
+    +data.sections.map(function(s){
+      return '<div class="bnav-item" data-main="'+s.id+'"><div class="bnav-icon">'+e(s.icon)+'</div><div class="bnav-label">'+e(s.label)+'</div></div>';
+    }).join('')
+    +'<div class="bnav-item" data-main="checklist"><div class="bnav-icon">✓</div><div class="bnav-label">Checklist</div></div>';
+  bn.querySelectorAll('.bnav-item').forEach(function(item){
+    tap(item,function(){showTab(item.getAttribute('data-main'),data);});
+  });
+
+  showTab('overview',data);
 }
 
-// CHECKLIST LOGIC
-function getChecks() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
-}
-function saveChecks(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+function showTab(tid,data){
+  if(!data) data=getTD(ST.tripId);
+  ST.tab=tid;
+  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-main')===tid);});
+  document.querySelectorAll('.bnav-item').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-main')===tid);});
+
+  if(tid==='overview'){renderOverview(data);showPanel('panel-overview');}
+  else if(tid==='checklist'){renderChecklist(data);showPanel('panel-checklist');}
+  else {
+    var sec=data.sections.find(function(s){return s.id===tid;});
+    if(sec){renderSection(sec,data);showPanel('panel-'+tid);}
+  }
 }
 
-function toggleCheck(item) {
-  const box = item.querySelector('.check-box');
-  const label = item.querySelector('.check-label');
-  const isDone = box.classList.toggle('done');
-  label.classList.toggle('done', isDone);
-  // save state by index
-  const all = document.querySelectorAll('.check-item');
-  const idx = Array.from(all).indexOf(item);
-  const data = getChecks();
-  data[idx] = isDone;
-  saveChecks(data);
-  updateProgress();
+// ── Overview ──────────────────────────────────────────────
+function renderOverview(data){
+  var el=document.getElementById('panel-overview');
+  el.innerHTML='<div class="intro-card">'
+    +'<div class="intro-route">'+e(data.from)+' <span>→</span> '+e(data.to)+'</div>'
+    +'<div class="intro-dates">'+e(data.startDate)+' – '+e(data.endDate)+'</div>'
+    +'<div class="intro-tags"><span class="intro-tag">'+e(data.tagline||'')+'</span></div>'
+    +'</div>'
+    +'<div class="stat-grid">'
+    +'<div class="stat"><div class="stat-label">Miles</div><div class="stat-val">'+e(data.totalMiles||'TBD')+'</div></div>'
+    +'<div class="stat"><div class="stat-label">Nights</div><div class="stat-val">'+e(data.nights||0)+'</div></div>'
+    +'<div class="stat"><div class="stat-label">Budget</div><div class="stat-val" style="font-size:17px">'+e(data.budget||'')+'</div></div>'
+    +'</div>'
+    +'<div class="timeline">'
+    +'<div class="tseg" style="flex:4;background:#92600a;color:#fef3c7">Ride Down ↓</div>'
+    +'<div class="tseg" style="flex:4;background:#14532d;color:#d1fae5">Base Camp</div>'
+    +'<div class="tseg" style="flex:5;background:#78350f;color:#fef3c7">Return ↑</div>'
+    +'</div>'
+    +'<div class="sec-header">Highlights <button class="small-btn" id="btn-edit-trip-info" style="font-size:11px;padding:4px 8px">Edit Trip</button></div>'
+    +'<div class="tip good"><b>Devil\'s Highway (US-491)</b> — Day 4. Blanding → Bluff → Cortez → Durango. Remote red canyon walls, almost no traffic.</div>'
+    +'<div class="tip info"><b>Million Dollar Highway (US-550)</b> — Rally Day 1. North to Ouray first, then southbound back. Mountain wall on your LEFT all the way down Red Mountain Pass.</div>'
+    +'<div class="tip good"><b>Monument Valley</b> — Jun 14 dedicated overnight. Golden hour on the Mittens from the saddle.</div>'
+    +'<div class="tip critical"><b>Book NOW</b> — Moab, Page, and Monument Valley area hotels fill up weeks in advance in June.</div>'
+    +'<div class="tip critical"><b>Notify your bank</b> — Flag WA, ID, UT, CO, AZ, NV before leaving.</div>';
+
+  tap(document.getElementById('btn-edit-trip-info'),function(){
+    document.getElementById('modal-trip-title').textContent='Edit Trip Info';
+    document.getElementById('btn-save-trip').textContent='Save Changes';
+    document.getElementById('nt-name').value=data.name||'';
+    document.getElementById('nt-from').value=data.from||'';
+    document.getElementById('nt-to').value=data.to||'';
+    document.getElementById('nt-start').value=data.startDate||'';
+    document.getElementById('nt-end').value=data.endDate||'';
+    document.getElementById('nt-tag').value=data.tagline||'';
+    document.getElementById('btn-save-trip')._mode='edit';
+    document.getElementById('btn-save-trip')._id=data.id;
+    openModal('modal-trip');
+  });
 }
 
-function resetChecks() {
-  saveChecks({});
-  document.querySelectorAll('.check-box').forEach(b => b.classList.remove('done'));
-  document.querySelectorAll('.check-label').forEach(l => l.classList.remove('done'));
-  updateProgress();
+// ── Section (days) ────────────────────────────────────────
+function renderSection(sec,data){
+  var el=document.getElementById('panel-'+sec.id);
+  var html='<div class="sec-header">'+e(sec.label)
+    +'<button class="small-btn" data-adddaysec="'+e(sec.id)+'" style="font-size:11px;padding:4px 8px">+ Add Day</button></div>';
+
+  sec.days.forEach(function(day){
+    var isHL=sec.id==='durango';
+    var isDev=day.id==='d4';
+    html+='<div class="day-card'+(isHL?' hl':isDev?' devil':'')+'">'
+      +'<div class="card-header">'
+      +'<div class="card-date">'+e(day.date)+'</div>'
+      +'<div class="card-title">'+e(day.title)+'</div>'
+      +(day.miles?'<div class="card-miles">'+e(day.miles)+'</div>':'')
+      +'<div class="card-chev">▼</div>'
+      +'</div>'
+      +'<div class="card-body">'
+      +'<div class="stops-list">';
+    day.stops.forEach(function(s){
+      html+='<div class="stop-item">'
+        +'<div class="stop-left"><div class="stop-dot" style="background:'+e(s.c||'#888')+'"></div><div class="stop-line"></div></div>'
+        +'<div><div class="stop-name">'+e(s.n)+'</div>'+(s.t?'<div class="stop-note">'+e(s.t)+'</div>':'')+'</div>'
+        +'</div>';
+    });
+    html+='</div>'
+      +(day.hotel?'<div class="hotel-row">🏨 '+e(day.hotel)+'</div>':'')
+      +'<button class="edit-day-btn" data-editday="'+e(day.id)+'" data-editsec="'+e(sec.id)+'">✏️ Edit This Day</button>'
+      +'</div></div>';
+  });
+
+  el.innerHTML=html;
+
+  el.querySelectorAll('.card-header').forEach(function(h){
+    tap(h,function(){
+      var body=h.nextElementSibling;
+      var chev=h.querySelector('.card-chev');
+      var open=body.classList.contains('open');
+      body.classList.toggle('open',!open);
+      if(chev) chev.style.transform=open?'':'rotate(180deg)';
+    });
+  });
+
+  el.querySelectorAll('.edit-day-btn').forEach(function(btn){
+    tap(btn,function(){openEditDay(btn.getAttribute('data-editday'),btn.getAttribute('data-editsec'),data);});
+  });
+
+  var addBtn=el.querySelector('[data-adddaysec]');
+  if(addBtn){
+    tap(addBtn,function(){
+      var secIdx=data.sections.findIndex(function(s){return s.id===addBtn.getAttribute('data-adddaysec');});
+      ST.editSecIdx=secIdx; ST.editDayIdx=-1;
+      document.getElementById('modal-day-title').textContent='Add Day';
+      document.getElementById('ed-date').value='';
+      document.getElementById('ed-title').value='';
+      document.getElementById('ed-miles').value='';
+      document.getElementById('ed-hotel').value='';
+      document.getElementById('ed-stops').innerHTML='';
+      openModal('modal-day');
+    });
+  }
 }
 
-function updateProgress() {
-  const all = document.querySelectorAll('.check-item');
-  const done = document.querySelectorAll('.check-box.done');
-  const pct = all.length ? Math.round(done.length / all.length * 100) : 0;
-  document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-label').textContent = done.length + ' of ' + all.length + ' checked';
+// ── Edit day ──────────────────────────────────────────────
+function openEditDay(dayId,secId,data){
+  var secIdx=data.sections.findIndex(function(s){return s.id===secId;});
+  var sec=data.sections[secIdx];
+  var dayIdx=sec.days.findIndex(function(d){return d.id===dayId;});
+  var day=sec.days[dayIdx];
+  ST.editSecIdx=secIdx; ST.editDayIdx=dayIdx;
+
+  document.getElementById('modal-day-title').textContent='Edit Day';
+  document.getElementById('ed-date').value=day.date||'';
+  document.getElementById('ed-title').value=day.title||'';
+  document.getElementById('ed-miles').value=day.miles||'';
+  document.getElementById('ed-hotel').value=day.hotel||'';
+  renderEditStops(day.stops||[]);
+  openModal('modal-day');
 }
 
-function restoreChecks() {
-  const data = getChecks();
-  const all = document.querySelectorAll('.check-item');
-  all.forEach((item, idx) => {
-    if (data[idx]) {
-      item.querySelector('.check-box').classList.add('done');
-      item.querySelector('.check-label').classList.add('done');
+function renderEditStops(stops){
+  var list=document.getElementById('ed-stops');
+  list.innerHTML=stops.map(function(s,i){
+    return '<div class="stop-edit-row" data-si="'+i+'">'
+      +'<div class="stop-edit-inputs">'
+      +'<input class="edit-field sn" placeholder="Stop name" value="'+e(s.n||'')+'">'
+      +'<input class="edit-field st" placeholder="Note (optional)" value="'+e(s.t||'')+'">'
+      +'</div>'
+      +'<button class="stop-del-btn" data-ds="'+i+'">✕</button>'
+      +'</div>';
+  }).join('');
+  list.querySelectorAll('[data-ds]').forEach(function(btn){
+    tap(btn,function(){btn.closest('.stop-edit-row').remove();});
+  });
+}
+
+function getEditStops(){
+  var stops=[];
+  document.querySelectorAll('#ed-stops .stop-edit-row').forEach(function(row){
+    var n=row.querySelector('.sn').value.trim();
+    var t=row.querySelector('.st').value.trim();
+    if(n) stops.push({n:n,t:t,c:'#f59e0b'});
+  });
+  return stops;
+}
+
+// ── Checklist ─────────────────────────────────────────────
+function renderChecklist(data){
+  var el=document.getElementById('panel-checklist');
+  var checks=getChecks(ST.tripId);
+  var cl=data.checklist;
+  var tabs=Object.keys(cl);
+
+  var html='<div class="progress-wrap">'
+    +'<div class="progress-row"><div class="progress-label" id="prog-lbl">0 of 0</div>'
+    +'<button class="reset-btn" id="cl-reset">Reset All</button></div>'
+    +'<div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>'
+    +'</div>'
+    +'<div class="check-tabs">'
+    +tabs.map(function(t){return '<div class="check-tab'+(t===ST.checkTab?' active':'')+'" data-ck="'+t+'">'+cap(t)+'</div>';}).join('')
+    +'</div>';
+
+  tabs.forEach(function(tk){
+    html+='<div class="check-panel'+(tk===ST.checkTab?' active':'')+'" id="ckp-'+tk+'">';
+    cl[tk].forEach(function(sec){
+      html+='<div class="check-section"><div class="check-sec-label">'+e(sec.section)+'</div>';
+      sec.items.forEach(function(item,ii){
+        var key=tk+'||'+sec.section+'||'+ii;
+        var done=checks[key];
+        html+='<div class="check-item" data-key="'+e(key)+'">'
+          +'<div class="check-box'+(done?' done':'')+'"></div>'
+          +'<div style="flex:1"><div class="check-label'+(done?' done':'')+'">'+e(item.l)
+          +(item.x?' <span class="badge b-critical">critical</span>':'')+'</div>'
+          +(item.n?'<span class="check-note">'+e(item.n)+'</span>':'')+'</div>'
+          +'<button class="check-del" data-delck="'+e(key)+'">✕</button>'
+          +'</div>';
+      });
+      html+='<div class="add-check-row">'
+        +'<input class="edit-field" placeholder="Add item..." data-addsec="'+e(tk+'||'+sec.section)+'" style="margin-bottom:0">'
+        +'<button class="small-btn amber" data-addck="'+e(tk+'||'+sec.section)+'">Add</button>'
+        +'</div></div>';
+    });
+    html+='</div>';
+  });
+
+  el.innerHTML=html;
+
+  // Tab switch
+  el.querySelectorAll('.check-tab').forEach(function(tab){
+    tap(tab,function(){
+      ST.checkTab=tab.getAttribute('data-ck');
+      el.querySelectorAll('.check-tab').forEach(function(t){t.classList.toggle('active',t===tab);});
+      el.querySelectorAll('.check-panel').forEach(function(p){p.classList.toggle('active',p.id==='ckp-'+ST.checkTab);});
+    });
+  });
+
+  // Toggle check
+  el.querySelectorAll('.check-item').forEach(function(item){
+    tap(item,function(ev){
+      if(ev.target.classList.contains('check-del')) return;
+      var key=item.getAttribute('data-key');
+      var box=item.querySelector('.check-box');
+      var lbl=item.querySelector('.check-label');
+      var done=!box.classList.contains('done');
+      box.classList.toggle('done',done);
+      lbl.classList.toggle('done',done);
+      var ch=getChecks(ST.tripId);
+      ch[key]=done;
+      saveChecks(ST.tripId,ch);
+      updateProg(el);
+    });
+  });
+
+  // Delete item
+  el.querySelectorAll('[data-delck]').forEach(function(btn){
+    tap(btn,function(){
+      var ch=getChecks(ST.tripId);
+      delete ch[btn.getAttribute('data-delck')];
+      saveChecks(ST.tripId,ch);
+      btn.closest('.check-item').remove();
+      updateProg(el);
+    });
+  });
+
+  // Add item
+  el.querySelectorAll('[data-addck]').forEach(function(btn){
+    tap(btn,function(){
+      var sk=btn.getAttribute('data-addck');
+      var input=el.querySelector('[data-addsec="'+sk+'"]');
+      var val=input.value.trim(); if(!val) return;
+      var key=sk+'||custom||'+Date.now();
+      var div=document.createElement('div');
+      div.className='check-item'; div.setAttribute('data-key',key);
+      div.innerHTML='<div class="check-box"></div>'
+        +'<div style="flex:1"><div class="check-label">'+e(val)+'</div></div>'
+        +'<button class="check-del" data-delck="'+e(key)+'">✕</button>';
+      btn.closest('.add-check-row').before(div);
+      tap(div,function(ev){
+        if(ev.target.classList.contains('check-del')){
+          var ch=getChecks(ST.tripId);delete ch[key];saveChecks(ST.tripId,ch);div.remove();updateProg(el);return;
+        }
+        var box=div.querySelector('.check-box');var lbl=div.querySelector('.check-label');
+        var done=!box.classList.contains('done');
+        box.classList.toggle('done',done);lbl.classList.toggle('done',done);
+        var ch=getChecks(ST.tripId);ch[key]=done;saveChecks(ST.tripId,ch);updateProg(el);
+      });
+      input.value='';updateProg(el);
+    });
+  });
+
+  // Reset
+  tap(document.getElementById('cl-reset'),function(){
+    saveChecks(ST.tripId,{});
+    el.querySelectorAll('.check-box').forEach(function(b){b.classList.remove('done');});
+    el.querySelectorAll('.check-label').forEach(function(l){l.classList.remove('done');});
+    updateProg(el);
+  });
+
+  updateProg(el);
+}
+
+function updateProg(el){
+  var all=el.querySelectorAll('.check-item');
+  var done=el.querySelectorAll('.check-box.done');
+  var pct=all.length?Math.round(done.length/all.length*100):0;
+  var fill=document.getElementById('prog-fill');
+  var lbl=document.getElementById('prog-lbl');
+  if(fill) fill.style.width=pct+'%';
+  if(lbl) lbl.textContent=done.length+' of '+all.length+' checked';
+}
+
+// ── Boot ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  initDefault();
+
+  // New trip button
+  tap(document.getElementById('btn-new-trip'),function(){
+    document.getElementById('modal-trip-title').textContent='New Trip';
+    document.getElementById('btn-save-trip').textContent='Create Trip';
+    ['nt-name','nt-from','nt-to','nt-start','nt-end','nt-tag'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('btn-save-trip')._mode='new';
+    openModal('modal-trip');
+  });
+
+  tap(document.getElementById('btn-cancel-trip'),function(){closeModal('modal-trip');});
+
+  tap(document.getElementById('btn-save-trip'),function(){
+    var name=document.getElementById('nt-name').value.trim();
+    var from=document.getElementById('nt-from').value.trim();
+    var to=document.getElementById('nt-to').value.trim();
+    var start=document.getElementById('nt-start').value.trim();
+    var end=document.getElementById('nt-end').value.trim();
+    var tag=document.getElementById('nt-tag').value.trim();
+    if(!name||!from||!to) return;
+    var btn=document.getElementById('btn-save-trip');
+
+    if(btn._mode==='edit'&&btn._id){
+      var data=getTD(btn._id);
+      data.name=name;data.from=from;data.to=to;data.startDate=start;data.endDate=end;data.tagline=tag;
+      saveTD(btn._id,data);
+      var trips=getTrips();
+      var t=trips.find(function(x){return x.id===btn._id;});
+      if(t){t.name=name;t.from=from;t.to=to;t.startDate=start;t.endDate=end;}
+      saveTrips(trips);
+      closeModal('modal-trip');
+      openTrip(btn._id);
+    } else {
+      var id='trip_'+Date.now();
+      var nd={id:id,name:name,from:from,to:to,startDate:start,endDate:end,tagline:tag,
+        totalMiles:'TBD',nights:0,budget:'$200/day',
+        sections:[
+          {id:'down',label:'Ride Down',icon:'↓',days:[]},
+          {id:'base',label:'Base Camp',icon:'⬡',days:[]},
+          {id:'return',label:'Return',icon:'↑',days:[]}
+        ],
+        checklist:{bike:[{section:'Bike',items:[]}],gear:[{section:'Gear',items:[]}],
+          pack:[{section:'Packing',items:[]}],admin:[{section:'Admin',items:[]}],
+          daily:[{section:'Daily',items:[]}]}
+      };
+      var trips=getTrips();
+      trips.unshift({id:id,name:name,from:from,to:to,startDate:start,endDate:end});
+      saveTrips(trips);saveTD(id,nd);
+      closeModal('modal-trip');
+      openTrip(id);
     }
   });
-  updateProgress();
-}
 
-restoreChecks();
+  // Edit day modal
+  tap(document.getElementById('ed-add-stop'),function(){
+    var list=document.getElementById('ed-stops');
+    var row=document.createElement('div');
+    row.className='stop-edit-row';
+    row.innerHTML='<div class="stop-edit-inputs">'
+      +'<input class="edit-field sn" placeholder="Stop name">'
+      +'<input class="edit-field st" placeholder="Note (optional)">'
+      +'</div><button class="stop-del-btn">✕</button>';
+    tap(row.querySelector('.stop-del-btn'),function(){row.remove();});
+    list.appendChild(row);
+  });
+
+  tap(document.getElementById('ed-cancel'),function(){closeModal('modal-day');});
+
+  tap(document.getElementById('ed-save'),function(){
+    var data=getTD(ST.tripId);
+    var sec=data.sections[ST.editSecIdx];
+    var day={
+      id:ST.editDayIdx>=0?sec.days[ST.editDayIdx].id:'day_'+Date.now(),
+      date:document.getElementById('ed-date').value.trim(),
+      title:document.getElementById('ed-title').value.trim(),
+      miles:document.getElementById('ed-miles').value.trim(),
+      hotel:document.getElementById('ed-hotel').value.trim(),
+      stops:getEditStops()
+    };
+    if(ST.editDayIdx>=0) sec.days[ST.editDayIdx]=day;
+    else sec.days.push(day);
+    saveTD(ST.tripId,data);
+    closeModal('modal-day');
+    showTab(sec.id,data);
+  });
+
+  tap(document.getElementById('ed-delete'),function(){
+    if(!confirm('Delete this day?')) return;
+    var data=getTD(ST.tripId);
+    var sec=data.sections[ST.editSecIdx];
+    sec.days.splice(ST.editDayIdx,1);
+    saveTD(ST.tripId,data);
+    closeModal('modal-day');
+    showTab(sec.id,data);
+  });
+
+  // Share modal
+  tap(document.getElementById('btn-close-share'),function(){closeModal('modal-share');});
+  tap(document.getElementById('btn-copy-link'),function(){
+    var url=document.getElementById('share-url').textContent;
+    var btn=document.getElementById('btn-copy-link');
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(url).then(function(){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy Link';},2000);});
+    } else {
+      var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+      btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy Link';},2000);
+    }
+  });
+
+  // Close modals on overlay tap
+  document.querySelectorAll('.modal-overlay').forEach(function(ov){
+    tap(ov,function(ev){if(ev.target===ov) ov.classList.remove('open');});
+  });
+
+  renderHome();
+  checkUrl();
+});
+})();
 </script>
 </body>
 </html>
