@@ -738,10 +738,9 @@ function renderJournal(data){
     html+='<div class="j-photo-add" data-addphoto="'+e(day.id)+'"><span>+</span></div>'
       +'</div>'
 
-      // Share row
+      // Share row — single button, native share sheet on iPhone
       +'<div class="j-share-row">'
-      +(dayPhotos.length>0?'<button class="share-btn native" data-sharenative="'+e(day.id)+'">📤 Share</button>':'')
-      +'<button class="share-btn fb" data-sharefb="'+e(day.id)+'">📤 Share (FB + more)</button>'
+      +'<button class="share-btn fb" data-sharefb="'+e(day.id)+'" style="width:100%;justify-content:center">📤 Share This Day</button>'
       +'</div>'
 
       +'</div></div>';
@@ -816,14 +815,6 @@ function renderJournal(data){
       shareToFacebook(dayId);
     });
   });
-
-  // Native share
-  el.querySelectorAll('[data-sharenative]').forEach(function(btn){
-    tap(btn,function(){
-      var dayId=btn.getAttribute('data-sharenative');
-      shareNative(dayId);
-    });
-  });
 }
 
 // ── Photo handling ────────────────────────────────────────
@@ -852,16 +843,6 @@ document.getElementById('photo-file-input').addEventListener('change',function(e
         // Update count label
         var countEl=grid.previousElementSibling;
         if(countEl)countEl.textContent='Photos ('+photos[dayId].length+')';
-        // Show native share button if not already
-        var shareRow=grid.nextElementSibling;
-        if(shareRow&&!shareRow.querySelector('[data-sharenative]')){
-          var nb=document.createElement('button');
-          nb.className='share-btn native';
-          nb.setAttribute('data-sharenative',dayId);
-          nb.textContent='📤 Share';
-          tap(nb,function(){shareNative(dayId);});
-          shareRow.insertBefore(nb,shareRow.firstChild);
-        }
       }
     };
     reader.readAsDataURL(file);
@@ -897,31 +878,32 @@ function openPhotoViewer(dayId,idx){
   actions.appendChild(delBtn);
 
   var shareBtn=document.createElement('button');
-  shareBtn.className='share-btn fb';shareBtn.textContent='f Share to Facebook';
+  shareBtn.className='share-btn fb';shareBtn.textContent='📤 Share This Day';
   tap(shareBtn,function(){shareToFacebook(dayId);});
   actions.appendChild(shareBtn);
-
-  if(navigator.share){
-    var natBtn=document.createElement('button');
-    natBtn.className='share-btn native';natBtn.textContent='📤 Share';
-    tap(natBtn,function(){shareNative(dayId);});
-    actions.appendChild(natBtn);
-  }
 
   document.getElementById('photo-viewer').classList.add('open');
 }
 
 // ── Share functions ───────────────────────────────────────
 function shareToFacebook(dayId){
-  // On iPhone: native share sheet lets user pick Facebook app directly — photo attaches cleanly
-  // On desktop: falls back to FB web sharer
   var data=getTD(ST.tripId);
   var allDays=[];
   data.sections.forEach(function(s){s.days.forEach(function(d){allDays.push(d);});});
   var day=allDays.find(function(d){return d.id===dayId;});
   var jrn=getJournal(ST.tripId);
   var note=(jrn[dayId]&&jrn[dayId].note)||'';
-  var text='Day on the road: '+((day&&day.title)||'')+(note?'\n\n'+note:'')+'\n\n#RumblingNomad #motorcycle #HOG';
+
+  // Extract destination city for location tag
+  var title=(day&&day.title)||'';
+  var dest=title.split('→');
+  var location=dest[dest.length-1].trim().replace(/overnight|arrive|🏠/gi,'').trim().split(',')[0].trim();
+  var dateStr=(day&&day.date)||'';
+
+  var text=dateStr+' · '+title
+    +(location?'\n📍 '+location:'')
+    +(note?'\n\n'+note:'')
+    +'\n\n#RumblingNomad #motorcycle #HOG #motolife';
 
   if(navigator.share){
     var photos=getPhotos(ST.tripId);
@@ -946,37 +928,6 @@ function shareToFacebook(dayId){
     var caption=encodeURIComponent(text);
     var url=encodeURIComponent(shareUrl(ST.tripId));
     window.open('https://www.facebook.com/sharer/sharer.php?u='+url+'&quote='+caption,'_blank');
-  }
-}
-
-function shareNative(dayId){
-  var photos=getPhotos(ST.tripId);
-  var dayPhotos=photos[dayId]||[];
-  var data=getTD(ST.tripId);
-  var allDays=[];
-  data.sections.forEach(function(s){s.days.forEach(function(d){allDays.push(d);});});
-  var day=allDays.find(function(d){return d.id===dayId;});
-  var jrn=getJournal(ST.tripId);
-  var note=(jrn[dayId]&&jrn[dayId].note)||'';
-  var text='Day on the road: '+((day&&day.title)||'')+'\n'+note+'\n#RumblingNomad';
-
-  if(navigator.share){
-    var shareData={title:'Rumbling Nomad',text:text,url:shareUrl(ST.tripId)};
-    if(dayPhotos.length>0&&navigator.canShare){
-      fetch(dayPhotos[dayPhotos.length-1].data)
-        .then(function(r){return r.blob();})
-        .then(function(blob){
-          var file=new File([blob],'ride-photo.jpg',{type:'image/jpeg'});
-          if(navigator.canShare({files:[file]})){
-            shareData.files=[file];
-          }
-          navigator.share(shareData).catch(function(){});
-        }).catch(function(){navigator.share(shareData).catch(function(){});});
-    } else {
-      navigator.share(shareData).catch(function(){});
-    }
-  } else {
-    shareToFacebook(dayId);
   }
 }
 
