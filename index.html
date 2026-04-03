@@ -250,7 +250,7 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
         </button>
       </div>
     </div>
-    <div id="view-ai-plan" class="panel" style="padding:0;display:flex;flex-direction:column;height:100%"></div>
+    <div id="view-ai-plan" class="panel"></div>
     <div id="panel-overview" class="panel"></div>
     <div id="panel-down" class="panel"></div>
     <div id="panel-durango" class="panel"></div>
@@ -530,8 +530,12 @@ function tap(el,fn){
 }
 
 function showPanel(id){
-  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
-  var el=document.getElementById(id);if(el)el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(function(p){
+    p.classList.remove('active');
+    p.style.display='';
+  });
+  var el=document.getElementById(id);
+  if(el) el.classList.add('active');
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -613,6 +617,11 @@ function openAIPlanner(){
   var ha=document.getElementById('hdr-actions');
   ha.innerHTML='<button class="hbtn" id="ai-back">← Back</button>';
   tap(document.getElementById('ai-back'),function(){
+    var aiEl=document.getElementById('view-ai-plan');
+    aiEl.style.display='';
+    aiEl.style.flexDirection='';
+    aiEl.style.height='';
+    aiEl.style.padding='';
     ST.view='home';
     document.getElementById('main-nav').style.display='none';
     document.getElementById('bottom-nav').style.display='none';
@@ -627,6 +636,9 @@ function openAIPlanner(){
   var el=document.getElementById('view-ai-plan');
   el.innerHTML='';
   el.style.display='flex';
+  el.style.flexDirection='column';
+  el.style.height='100%';
+  el.style.padding='0';
 
   var wrap=document.createElement('div');
   wrap.className='ai-chat-wrap';
@@ -2042,3 +2054,4 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body>
 </html>
+
