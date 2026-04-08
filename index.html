@@ -212,7 +212,7 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .j-weather-temp{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--amber)}
 .j-weather-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--asphalt-4);border-radius:4px;background:transparent;color:var(--smoke);cursor:pointer}
 /* LIVE RIDE PROGRESS */
-.ride-map-wrap{position:relative;width:100%;height:280px;background:var(--asphalt-3);overflow:hidden;flex-shrink:0}
+.ride-map-wrap{position:relative;width:100%;height:320px;background:var(--asphalt-3);overflow:hidden;flex-shrink:0}
 #ride-map{width:100%;height:100%}
 .ride-map-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.05em;text-transform:uppercase}
 .ride-map-loading .spinner{width:28px;height:28px;border:2px solid var(--asphalt-4);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite}
@@ -622,12 +622,11 @@ function renderRide(data){
 function initRideMap(data,day){
   var mapEl=document.getElementById('ride-map');if(!mapEl)return;
   var loading=document.getElementById('ride-map-loading');
-  var ds=[{elementType:'geometry',stylers:[{color:'#1a1a1a'}]},{elementType:'labels.text.fill',stylers:[{color:'#888'}]},{elementType:'labels.text.stroke',stylers:[{color:'#0f0f0f'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#2e2e2e'}]},{featureType:'road.highway',elementType:'geometry',stylers:[{color:'#3d3d00'}]},{featureType:'road.highway',elementType:'labels.text.fill',stylers:[{color:'#f59e0b'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#0d1b2a'}]},{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'off'}]}];
-  if(!RIDE.map)RIDE.map=new google.maps.Map(mapEl,{zoom:8,center:{lat:46.7,lng:-117.4},styles:ds,disableDefaultUI:true,zoomControl:true,gestureHandling:'greedy'});
+  if(!RIDE.map)RIDE.map=new google.maps.Map(mapEl,{zoom:8,center:{lat:46.7,lng:-117.4},mapTypeId:google.maps.MapTypeId.TERRAIN,disableDefaultUI:true,zoomControl:true,gestureHandling:'greedy',mapTypeControl:false});
   var route=parseDayRoute(day);
   if(!route.origin||!route.dest){if(loading)loading.style.display='none';return;}
   if(RIDE.directionsRenderer){RIDE.directionsRenderer.setMap(null);RIDE.directionsRenderer=null;}
-  RIDE.directionsRenderer=new google.maps.DirectionsRenderer({suppressMarkers:false,polylineOptions:{strokeColor:'#f59e0b',strokeWeight:4,strokeOpacity:.9}});
+  RIDE.directionsRenderer=new google.maps.DirectionsRenderer({suppressMarkers:false,polylineOptions:{strokeColor:'#f59e0b',strokeWeight:6,strokeOpacity:1}});
   RIDE.directionsRenderer.setMap(RIDE.map);
   var svc=new google.maps.DirectionsService(),wpts=[];
   if(day.stops&&day.stops.length>2){for(var i=1;i<day.stops.length-1;i++){var sn=day.stops[i].n.split('—')[0].trim();if(sn&&sn.length>3&&!/fuel|break|overnight|rally|check/i.test(sn))wpts.push({location:sn,stopover:false});}}
