@@ -816,7 +816,7 @@ function sendAIMessage(){
   input.value='';input.style.height='auto';
   addAIMessage('user',text);AI_HISTORY.push({role:'user',content:text});
   var thinking=addThinking();var sendBtn=document.getElementById('ai-send');if(sendBtn)sendBtn.disabled=true;
-  fetch('https://rumbling-nomad.netlify.app/.netlify/functions/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:AI_SYSTEM,messages:AI_HISTORY})})
+  fetch('https://rumbling-nomad-ai.bpearltx.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,system:AI_SYSTEM,messages:AI_HISTORY})})
   .then(function(r){return r.json();})
   .then(function(data){
     if(thinking)thinking.remove();if(sendBtn)sendBtn.disabled=false;
