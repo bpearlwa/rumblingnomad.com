@@ -255,6 +255,56 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .ride-stop-indicator{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
 .ride-stop-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:500;color:var(--white)}
 .ride-stop-note{font-size:11px;color:var(--smoke);line-height:1.4;margin-top:1px}
+/* PHOTO IMPORT */
+.imp-wrap{padding:12px 12px 90px}
+.imp-hero{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-top:3px solid var(--amber);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center}
+.imp-hero-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.04em;color:var(--white);line-height:1.1;margin-bottom:6px}
+.imp-hero-sub{font-size:13px;color:var(--smoke);line-height:1.5;margin-bottom:14px}
+.imp-btn{width:100%;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:13px;border-radius:8px;cursor:pointer;border:none;background:var(--amber);color:var(--asphalt)}
+.imp-btn:active{opacity:.8}
+.imp-note{font-size:11px;color:var(--smoke);line-height:1.5;margin-top:10px;font-style:italic}
+.imp-map-wrap{position:relative;width:100%;height:300px;background:var(--asphalt-3);border-radius:10px;overflow:hidden;margin-bottom:12px}
+#imp-map{width:100%;height:100%}
+.imp-status{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.imp-status .spinner{width:20px;height:20px;border:2px solid var(--asphalt-4);border-top-color:var(--amber);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.imp-status-text{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--smoke-light);letter-spacing:.03em}
+.imp-tally{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;gap:14px;align-items:center}
+.imp-tally-num{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--amber);line-height:1}
+.imp-tally-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--smoke);line-height:1.3}
+.imp-warn{background:#2e1a0a;border:1px solid #92600a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#fcd34d;line-height:1.5}
+.imp-stop{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.imp-stop-head{padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--asphalt-3)}
+.imp-stop-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.imp-stop-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--white);flex:1;line-height:1.2}
+.imp-stop-time{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--smoke);white-space:nowrap}
+.imp-stop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:10px 12px}
+.imp-stop-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;background:var(--asphalt-3)}
+.imp-diag-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.04em;color:var(--amber);margin-bottom:6px}
+.imp-diag-help{font-size:12px;color:var(--smoke);line-height:1.5;margin-bottom:10px;font-style:italic}
+.imp-diag-row{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:12px;line-height:1.6}
+.imp-diag-head{font-family:'Barlow Condensed',sans-serif;font-weight:600;color:var(--white);font-size:13px;margin-bottom:4px;border-bottom:1px solid var(--asphalt-3);padding-bottom:4px;letter-spacing:.03em;word-break:break-all}
+.imp-diag-line{color:var(--smoke-light)}
+.imp-diag-lbl{display:inline-block;min-width:78px;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-size:10px;letter-spacing:.07em;font-weight:600}
+.imp-diag-sub{color:var(--smoke);font-size:11px}
+.imp-diag-err{color:var(--ember);font-size:11px;margin-top:4px}
+.imp-yes{color:var(--green);font-weight:600}
+.imp-no{color:var(--ember);font-weight:600}
+.imp-running-bar{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.imp-running-stats{display:flex;align-items:center;gap:10px;flex:1;min-width:140px}
+.imp-running-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--amber);line-height:1}
+.imp-running-lbl{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--white);line-height:1.3}
+.imp-running-sub{font-size:10px;color:var(--smoke);font-weight:500;letter-spacing:.05em}
+.imp-running-actions{display:flex;gap:6px;flex-wrap:wrap}
+.imp-add-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:8px 14px;border-radius:6px;cursor:pointer;border:none;background:var(--amber);color:var(--asphalt);white-space:nowrap}
+.imp-add-btn:active{opacity:.8}
+.imp-reset-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--asphalt-4);background:transparent;color:var(--smoke);white-space:nowrap}
+.imp-reset-btn:active{border-color:var(--ember);color:var(--ember)}
+.imp-added-note{background:var(--asphalt-3);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:6px 10px;margin-bottom:10px;font-size:12px;color:var(--smoke-light);line-height:1.5}
+.imp-added-note.imp-added-skip{border-left-color:var(--smoke);color:var(--smoke)}
+.imp-diag-toggle-row{margin:14px 0 8px;text-align:center}
+.imp-diag-toggle{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--asphalt-4);background:transparent;color:var(--smoke)}
+.imp-diag-toggle:active{border-color:var(--amber);color:var(--amber)}
+.imp-diag-body{margin-top:4px}
 </style>
 </head>
 <body>
@@ -345,6 +395,10 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 </div>
 
 <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none">
+<input type="file" id="imp-file-input" accept="image/*" multiple style="display:none">
+
+<!-- EXIF parsing for photo import -->
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
 
 <!-- Google Maps JavaScript API -->
 <script>
@@ -867,12 +921,12 @@ function openTrip(id){
     +'<div class="nav-tab" data-main="journal">Journal</div>'
     +'<div class="nav-tab" data-main="weather">Weather</div>'
     +'<div class="nav-tab" data-main="checklist">Checklist</div>'
-    +'<div class="nav-tab" data-main="ride">Live Ride</div>'
+    +'<div class="nav-tab" data-main="ride">Organize</div>'
     +'<div class="nav-tab" data-main="book">Trip Book</div>';
   nav.querySelectorAll('.nav-tab').forEach(function(tab){tap(tab,function(){showTab(tab.getAttribute('data-main'),data);});});
   var bn=document.getElementById('bottom-nav');bn.style.display='flex';
   bn.innerHTML='<div class="bnav-item" data-main="overview"><div class="bnav-icon">◎</div><div class="bnav-label">Trip</div></div>'
-    +'<div class="bnav-item" data-main="ride"><div class="bnav-icon">📍</div><div class="bnav-label">Ride</div></div>'
+    +'<div class="bnav-item" data-main="ride"><div class="bnav-icon">🗺</div><div class="bnav-label">Organize</div></div>'
     +'<div class="bnav-item" data-main="journal"><div class="bnav-icon">📷</div><div class="bnav-label">Journal</div></div>'
     +'<div class="bnav-item" data-main="weather"><div class="bnav-icon">☀</div><div class="bnav-label">Weather</div></div>'
     +'<div class="bnav-item" data-main="checklist"><div class="bnav-icon">✓</div><div class="bnav-label">Checklist</div></div>';
@@ -889,7 +943,7 @@ function showTab(tid,data){
   else if(tid==='journal'){renderJournal(data);showPanel('panel-journal');}
   else if(tid==='weather'){renderWeather(data);showPanel('panel-weather');}
   else if(tid==='book'){renderBook(data);showPanel('panel-book');}
-  else if(tid==='ride'){renderRide(data);showPanel('panel-ride');}
+  else if(tid==='ride'){renderImport(data);showPanel('panel-ride');}
   else{var sec=data.sections.find(function(s){return s.id===tid;});if(sec){renderSection(sec,data);showPanel('panel-'+tid);}}
 }
 
@@ -1139,9 +1193,333 @@ function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhot
   var win=window.open('','_blank');if(win){win.document.write(html);win.document.close();win.onload=function(){setTimeout(function(){win.print();},800);};}else{alert('Please allow popups to generate your Trip Book PDF.');}
 }
 
+// ── PHOTO IMPORT → MAP (replaces Live Ride) ──────────────────────────
+var IMPORT={map:null,markers:[],geocoder:null,bounds:null,allReports:[],totalSeen:0};
+var CLUSTER_METERS=1500;      // photos within this distance = same stop
+var CLUSTER_TIME_GAP_MIN=45;  // OR a time gap bigger than this starts a new stop
+
+function renderImport(data){
+  var el=document.getElementById('panel-ride');if(!el)return;
+  IMPORT.map=null;IMPORT.markers=[];IMPORT.bounds=null;
+  // Reset the accumulator when the user re-enters the tab fresh
+  IMPORT.allReports=[];IMPORT.totalSeen=0;
+  el.innerHTML=''
+    +'<div class="imp-wrap">'
+    +'  <div class="imp-hero">'
+    +'    <div class="imp-hero-title">Organize Today\u2019s Ride</div>'
+    +'    <div class="imp-hero-sub">Back at the hotel? Drop in the photos you took today and watch the day sort itself into stops.</div>'
+    +'    <button class="imp-btn" id="imp-pick">\uD83D\uDCF7 Import Photos</button>'
+    +'    <div class="imp-note">iOS limits how many photos can be picked at once \u2014 just tap Import again to add more. Each batch adds to the day.</div>'
+    +'  </div>'
+    +'  <div id="imp-results"></div>'
+    +'</div>';
+  tap(document.getElementById('imp-pick'),function(){
+    var inp=document.getElementById('imp-file-input');
+    inp.value='';inp.click();
+  });
+}
+
+function handleImportFiles(files){
+  if(!files||!files.length)return;
+  var results=document.getElementById('imp-results');if(!results)return;
+  var batchSize=files.length;
+  var alreadyHave=IMPORT.allReports.length;
+  // Show a status banner that doesn't blow away existing results
+  var status=document.getElementById('imp-status');
+  if(!status){
+    var s=document.createElement('div');
+    s.className='imp-status';s.id='imp-status';
+    s.innerHTML='<div class="spinner"></div><div class="imp-status-text" id="imp-status-text">Reading '+batchSize+' photo'+(batchSize>1?'s':'')+'\u2026</div>';
+    results.insertBefore(s,results.firstChild);
+  }else{
+    var st=document.getElementById('imp-status-text');
+    if(st)st.textContent='Reading '+batchSize+' more photo'+(batchSize>1?'s':'')+'\u2026';
+  }
+  var read=0,newReports=new Array(batchSize);
+  var arr=Array.from(files);
+  var jobs=arr.map(function(file,idx){
+    return Promise.all([readExifFull(file),fileToDataUrl(file)]).then(function(pair){
+      read++;
+      var st=document.getElementById('imp-status-text');
+      if(st)st.textContent='Reading photos\u2026 '+read+' of '+batchSize+' in this batch';
+      var info=pair[0]||{},dataUrl=pair[1];
+      newReports[idx]={
+        name:file.name||'(no name)',
+        size:file.size||0,
+        type:file.type||'(unknown)',
+        hasGps:typeof info.lat==='number'&&typeof info.lng==='number',
+        lat:info.lat,lng:info.lng,
+        ts:info.ts||0,
+        when:info.whenRaw||null,
+        make:info.make||null,
+        model:info.model||null,
+        rawKeys:info.rawKeys||[],
+        parseError:info.parseError||null,
+        data:dataUrl
+      };
+    }).catch(function(err){
+      read++;
+      newReports[idx]={name:file.name||'(no name)',size:file.size||0,type:file.type||'(unknown)',hasGps:false,parseError:String(err&&err.message||err||'unknown error')};
+    });
+  });
+  Promise.all(jobs).then(function(){
+    // De-duplicate against existing reports by name+size (same photo picked twice)
+    var existingKeys={};
+    IMPORT.allReports.forEach(function(r){existingKeys[r.name+':'+r.size]=true;});
+    var dedupAdded=0;
+    newReports.forEach(function(r){
+      if(!r)return;
+      var k=r.name+':'+r.size;
+      if(existingKeys[k])return; // skip duplicate
+      existingKeys[k]=true;
+      IMPORT.allReports.push(r);
+      dedupAdded++;
+    });
+    IMPORT.totalSeen=IMPORT.allReports.length;
+    var withGps=IMPORT.allReports.filter(function(r){return r.hasGps;});
+    renderDiagnostic(results,IMPORT.allReports,withGps.length,IMPORT.totalSeen,{justAdded:dedupAdded,batchSize:batchSize});
+    if(withGps.length){
+      var photos=withGps.map(function(r){return{lat:r.lat,lng:r.lng,ts:r.ts||0,data:r.data,name:r.name};});
+      photos.sort(function(a,b){return a.ts-b.ts;});
+      // Reset map state so we rebuild from the full accumulated set
+      IMPORT.map=null;IMPORT.markers=[];IMPORT.bounds=null;
+      var clusters=clusterPhotos(photos);
+      renderImportResults(document.getElementById('imp-map-section'),clusters,withGps.length,IMPORT.totalSeen);
+      loadGmaps();onGmapsReady(function(){plotImportMap(clusters);reverseGeocodeClusters(clusters);});
+    }
+  });
+}
+
+function renderDiagnostic(container,reports,gpsCount,total,meta){
+  meta=meta||{};
+  var diagHidden=true; // diagnostic collapsed by default — magic moment leads
+  var addedNote='';
+  if(meta.justAdded!=null&&meta.batchSize!=null){
+    if(meta.justAdded===0){
+      addedNote='<div class="imp-added-note imp-added-skip">All '+meta.batchSize+' from that batch were already imported \u2014 nothing new added.</div>';
+    }else if(meta.justAdded<meta.batchSize){
+      addedNote='<div class="imp-added-note">Added '+meta.justAdded+' new \u00b7 skipped '+(meta.batchSize-meta.justAdded)+' duplicates.</div>';
+    }else{
+      addedNote='<div class="imp-added-note">Added '+meta.justAdded+' new photo'+(meta.justAdded>1?'s':'')+'.</div>';
+    }
+  }
+  var html=''
+    +'<div class="imp-running-bar">'
+    +'  <div class="imp-running-stats">'
+    +'    <div class="imp-running-num">'+gpsCount+'</div>'
+    +'    <div class="imp-running-lbl">photo'+(gpsCount===1?'':'s')+' on map<br><span class="imp-running-sub">'+total+' imported total</span></div>'
+    +'  </div>'
+    +'  <div class="imp-running-actions">'
+    +'    <button class="imp-add-btn" id="imp-add-more">+ Add More</button>'
+    +'    <button class="imp-reset-btn" id="imp-reset">Start Over</button>'
+    +'  </div>'
+    +'</div>'
+    +addedNote
+    +'<div id="imp-map-section"></div>'
+    +'<div class="imp-diag-toggle-row">'
+    +'  <button class="imp-diag-toggle" id="imp-diag-toggle">\uD83D\uDD0D Show diagnostic ('+total+' photo'+(total===1?'':'s')+')</button>'
+    +'</div>'
+    +'<div id="imp-diag-body" class="imp-diag-body" style="display:none">'
+    +'  <div class="imp-diag-help">For each photo iOS handed the app, this shows what the app received. If GPS says NO here but Photos shows a map on that same photo, iOS stripped it on the way over.</div>';
+  reports.forEach(function(r,i){
+    var fmt=r.type||'';
+    var fmtShort=fmt.indexOf('heic')>=0||fmt.indexOf('heif')>=0?'HEIC':(fmt.indexOf('jpeg')>=0||fmt.indexOf('jpg')>=0?'JPEG':(fmt.indexOf('png')>=0?'PNG':(fmt||'?')));
+    var sizeKb=Math.round((r.size||0)/1024);
+    var gpsLine=r.hasGps
+      ? '<span class="imp-yes">YES</span> &middot; '+r.lat.toFixed(5)+', '+r.lng.toFixed(5)
+      : '<span class="imp-no">NO</span>';
+    var tsLine=r.ts?new Date(r.ts).toLocaleString():(r.when||'<span class="imp-no">none</span>');
+    var camLine=(r.make||r.model)?[r.make,r.model].filter(Boolean).join(' '):'<span class="imp-no">none</span>';
+    var rawLine=r.rawKeys&&r.rawKeys.length?r.rawKeys.slice(0,12).join(', ')+(r.rawKeys.length>12?'\u2026':''):'<span class="imp-no">no exif keys returned</span>';
+    html+=''
+      +'<div class="imp-diag-row">'
+      +'  <div class="imp-diag-head">#'+(i+1)+' &middot; '+escAttr(r.name)+'</div>'
+      +'  <div class="imp-diag-line"><span class="imp-diag-lbl">Format:</span> '+escAttr(fmtShort)+' <span class="imp-diag-sub">('+escAttr(fmt||'no type')+')</span></div>'
+      +'  <div class="imp-diag-line"><span class="imp-diag-lbl">Size:</span> '+sizeKb.toLocaleString()+' KB</div>'
+      +'  <div class="imp-diag-line"><span class="imp-diag-lbl">GPS:</span> '+gpsLine+'</div>'
+      +'  <div class="imp-diag-line"><span class="imp-diag-lbl">Taken:</span> '+escAttr(tsLine)+'</div>'
+      +'  <div class="imp-diag-line"><span class="imp-diag-lbl">Camera:</span> '+escAttr(camLine)+'</div>'
+      +'  <div class="imp-diag-line"><span class="imp-diag-lbl">EXIF keys:</span> <span class="imp-diag-sub">'+escAttr(rawLine)+'</span></div>'
+      +(r.parseError?'<div class="imp-diag-line imp-diag-err">Parse error: '+escAttr(r.parseError)+'</div>':'')
+      +'</div>';
+  });
+  html+='</div>'; // close imp-diag-body
+  container.innerHTML=html;
+
+  // Wire the new buttons
+  tap(document.getElementById('imp-add-more'),function(){
+    var inp=document.getElementById('imp-file-input');
+    if(inp){inp.value='';inp.click();}
+  });
+  tap(document.getElementById('imp-reset'),function(){
+    if(!confirm('Clear all imported photos and start over?'))return;
+    IMPORT.allReports=[];IMPORT.totalSeen=0;
+    IMPORT.map=null;IMPORT.markers=[];IMPORT.bounds=null;
+    container.innerHTML='';
+  });
+  tap(document.getElementById('imp-diag-toggle'),function(){
+    var body=document.getElementById('imp-diag-body');
+    var btn=document.getElementById('imp-diag-toggle');
+    if(!body||!btn)return;
+    var hidden=body.style.display==='none';
+    body.style.display=hidden?'block':'none';
+    btn.innerHTML=(hidden?'\uD83D\uDD0D Hide diagnostic':'\uD83D\uDD0D Show diagnostic')+' ('+total+' photo'+(total===1?'':'s')+')';
+  });
+}
+
+// allow either escaped or raw HTML in diagnostic values; for plain text fields use escAttr
+function escAttr(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function readExifFull(file){
+  if(!window.exifr)return Promise.resolve({parseError:'exifr library not loaded'});
+  return fileToArrayBuffer(file).then(function(buf){
+    return window.exifr.parse(buf,{gps:true,tiff:true,ifd0:true,exif:true,xmp:true,iptc:true,translateKeys:true,translateValues:true,reviveValues:true})
+      .then(function(d){
+        if(!d)return{parseError:'exifr returned null (file may not contain readable metadata)',rawKeys:[]};
+        var out={
+          lat:typeof d.latitude==='number'?d.latitude:null,
+          lng:typeof d.longitude==='number'?d.longitude:null,
+          make:d.Make||null,
+          model:d.Model||null,
+          rawKeys:Object.keys(d).filter(function(k){return k!=='errors';})
+        };
+        var when=d.DateTimeOriginal||d.CreateDate||d.ModifyDate;
+        if(when){
+          var dt=when instanceof Date?when:new Date(when);
+          if(!isNaN(dt.getTime())){out.ts=dt.getTime();out.whenRaw=dt.toLocaleString();}
+        }
+        if(d.errors&&d.errors.length){out.parseError='exifr errors: '+d.errors.length+' segment(s) failed';}
+        return out;
+      })
+      .catch(function(err){return{parseError:'parse threw: '+(err&&err.message||err),rawKeys:[]};});
+  }).catch(function(err){return{parseError:'read threw: '+(err&&err.message||err),rawKeys:[]};});
+}
+
+// Kept for the map render path — uses the full reader internally
+function readExif(file){
+  return readExifFull(file).then(function(r){
+    if(!r||r.lat==null||r.lng==null)return null;
+    return{lat:r.lat,lng:r.lng,ts:r.ts||0};
+  });
+}
+
+function fileToArrayBuffer(file){
+  return new Promise(function(res,rej){
+    var r=new FileReader();
+    r.onload=function(){res(r.result);};
+    r.onerror=function(){rej();};
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function fileToDataUrl(file){
+  return new Promise(function(res,rej){
+    var r=new FileReader();
+    r.onload=function(){res(r.result);};
+    r.onerror=function(){rej();};
+    r.readAsDataURL(file);
+  });
+}
+
+function haversine(aLat,aLng,bLat,bLng){
+  var R=6371000,toRad=function(d){return d*Math.PI/180;};
+  var dLat=toRad(bLat-aLat),dLng=toRad(bLng-aLng);
+  var s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(aLat))*Math.cos(toRad(bLat))*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function clusterPhotos(photos){
+  var clusters=[],cur=null;
+  photos.forEach(function(p){
+    if(!cur){cur=newCluster(p);clusters.push(cur);return;}
+    var dist=haversine(cur.lat,cur.lng,p.lat,p.lng);
+    var gapMin=(cur.lastTs&&p.ts)?Math.abs(p.ts-cur.lastTs)/60000:0;
+    if(dist<=CLUSTER_METERS&&(!gapMin||gapMin<=CLUSTER_TIME_GAP_MIN)){
+      cur.photos.push(p);
+      var n=cur.photos.length;
+      cur.lat=(cur.lat*(n-1)+p.lat)/n;
+      cur.lng=(cur.lng*(n-1)+p.lng)/n;
+      if(p.ts)cur.lastTs=p.ts;
+      if(p.ts&&(!cur.firstTs||p.ts<cur.firstTs))cur.firstTs=p.ts;
+    }else{
+      cur=newCluster(p);clusters.push(cur);
+    }
+  });
+  return clusters;
+}
+function newCluster(p){return{lat:p.lat,lng:p.lng,firstTs:p.ts||0,lastTs:p.ts||0,photos:[p],place:null};}
+
+function renderImportResults(container,clusters,gpsCount,total){
+  if(!container)return;
+  var html=''
+    +'<div class="imp-diag-title" style="margin-top:14px">\uD83D\uDDFA Organized Map</div>'
+    +'<div class="imp-map-wrap"><div id="imp-map"></div></div>';
+  clusters.forEach(function(c,i){
+    html+='<div class="imp-stop"><div class="imp-stop-head"><div class="imp-stop-dot"></div><div class="imp-stop-name" id="imp-place-'+i+'">Locating\u2026</div><div class="imp-stop-time">'+fmtClusterTime(c)+'</div></div><div class="imp-stop-grid">';
+    c.photos.forEach(function(p){html+='<img class="imp-stop-thumb" src="'+p.data+'" alt="">';});
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+function fmtClusterTime(c){
+  if(!c.firstTs)return c.photos.length+' photo'+(c.photos.length>1?'s':'');
+  var d=new Date(c.firstTs);
+  var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';
+  h=h%12;if(h===0)h=12;
+  return (h)+':'+(m<10?'0':'')+m+' '+ap;
+}
+
+function plotImportMap(clusters){
+  var mapEl=document.getElementById('imp-map');if(!mapEl||!window.google)return;
+  IMPORT.map=new google.maps.Map(mapEl,{zoom:9,center:{lat:clusters[0].lat,lng:clusters[0].lng},mapTypeId:google.maps.MapTypeId.TERRAIN,disableDefaultUI:true,zoomControl:true,gestureHandling:'greedy'});
+  IMPORT.bounds=new google.maps.LatLngBounds();
+  clusters.forEach(function(c,i){
+    var ll={lat:c.lat,lng:c.lng};
+    var marker=new google.maps.Marker({position:ll,map:IMPORT.map,label:{text:String(i+1),color:'#0f0f0f',fontSize:'12px',fontWeight:'700'},icon:{path:google.maps.SymbolPath.CIRCLE,scale:13,fillColor:'#f59e0b',fillOpacity:1,strokeColor:'#0f0f0f',strokeWeight:2}});
+    IMPORT.markers.push(marker);
+    IMPORT.bounds.extend(ll);
+  });
+  if(clusters.length>1){
+    new google.maps.Polyline({path:clusters.map(function(c){return{lat:c.lat,lng:c.lng};}),map:IMPORT.map,strokeColor:'#f59e0b',strokeOpacity:.6,strokeWeight:3});
+    IMPORT.map.fitBounds(IMPORT.bounds,40);
+  }else{
+    IMPORT.map.setZoom(13);
+  }
+}
+
+function reverseGeocodeClusters(clusters){
+  if(!window.google)return;
+  if(!IMPORT.geocoder)IMPORT.geocoder=new google.maps.Geocoder();
+  clusters.forEach(function(c,i){
+    setTimeout(function(){
+      IMPORT.geocoder.geocode({location:{lat:c.lat,lng:c.lng}},function(res,status){
+        var label='Unknown location';
+        if(status==='OK'&&res&&res.length){label=shortPlace(res);}
+        c.place=label;
+        var el=document.getElementById('imp-place-'+i);if(el)el.textContent=label;
+      });
+    },i*250);
+  });
+}
+function shortPlace(results){
+  var locality=null,admin=null,fallback=results[0].formatted_address;
+  results.forEach(function(r){
+    r.address_components.forEach(function(comp){
+      if(!locality&&comp.types.indexOf('locality')!==-1)locality=comp.long_name;
+      if(!admin&&comp.types.indexOf('administrative_area_level_1')!==-1)admin=comp.short_name;
+    });
+  });
+  if(locality&&admin)return locality+', '+admin;
+  if(locality)return locality;
+  if(admin)return admin;
+  return fallback;
+}
+
 // ── Boot ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',function(){
   initDefault();
+  document.getElementById('imp-file-input').addEventListener('change',function(ev){
+    handleImportFiles(ev.target.files);
+  });
   tap(document.getElementById('pv-close'),function(){document.getElementById('photo-viewer').classList.remove('open');});
   tap(document.getElementById('btn-ai-trip'),function(){openAIPlanner();});
   tap(document.getElementById('btn-new-trip'),function(){
