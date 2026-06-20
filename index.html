@@ -305,6 +305,13 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .imp-diag-toggle{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:20px;cursor:pointer;border:1px solid var(--asphalt-4);background:transparent;color:var(--smoke)}
 .imp-diag-toggle:active{border-color:var(--amber);color:var(--amber)}
 .imp-diag-body{margin-top:4px}
+.imp-save-btn{width:100%;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:13px;border-radius:8px;cursor:pointer;border:none;background:var(--green);color:var(--asphalt);margin:6px 0 4px}
+.imp-save-btn:active{opacity:.85}
+.imp-day-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+.imp-day-choice{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;width:100%;background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:8px;padding:10px 12px;cursor:pointer}
+.imp-day-choice:active{border-color:var(--amber)}
+.imp-day-choice-date{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke)}
+.imp-day-choice-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--white);line-height:1.2}
 </style>
 </head>
 <body>
@@ -1316,6 +1323,7 @@ function renderDiagnostic(container,reports,gpsCount,total,meta){
     +'</div>'
     +addedNote
     +'<div id="imp-map-section"></div>'
+    +(gpsCount>0?'<button class="imp-save-btn" id="imp-save-journal">\uD83D\uDCBE Save These '+gpsCount+' Photo'+(gpsCount===1?'':'s')+' to a Trip</button>':'')
     +'<div class="imp-diag-toggle-row">'
     +'  <button class="imp-diag-toggle" id="imp-diag-toggle">\uD83D\uDD0D Show diagnostic ('+total+' photo'+(total===1?'':'s')+')</button>'
     +'</div>'
@@ -1365,6 +1373,168 @@ function renderDiagnostic(container,reports,gpsCount,total,meta){
     body.style.display=hidden?'block':'none';
     btn.innerHTML=(hidden?'\uD83D\uDD0D Hide diagnostic':'\uD83D\uDD0D Show diagnostic')+' ('+total+' photo'+(total===1?'':'s')+')';
   });
+  tap(document.getElementById('imp-save-journal'),function(){openSaveToJournal();});
+}
+
+// ── Save organized photos into the Journal ───────────────────────────
+function openSaveToJournal(){
+  var withGps=IMPORT.allReports.filter(function(r){return r.hasGps;});
+  if(!withGps.length){alert('No photos with location to save yet.');return;}
+  // Step 1: choose NEW trip or EXISTING trip
+  var existing=document.getElementById('imp-save-modal');if(existing)existing.remove();
+  var ov=document.createElement('div');ov.className='modal-overlay open';ov.id='imp-save-modal';
+  ov.innerHTML='<div class="modal"><div class="modal-title">Save '+withGps.length+' Photo'+(withGps.length===1?'':'s')+'</div>'
+    +'<p style="font-size:13px;color:var(--smoke);line-height:1.6;margin-bottom:14px">These photos span '+importDaySpan(withGps)+'. Start a new documented trip from them, or add them to a trip you already have.</p>'
+    +'<div class="imp-day-list">'
+    +'  <button class="imp-day-choice" id="imp-newtrip"><span class="imp-day-choice-date">RECOMMENDED</span><span class="imp-day-choice-title">\uD83C\uDD95 Create a new trip from these photos</span></button>'
+    +'  <button class="imp-day-choice" id="imp-existtrip"><span class="imp-day-choice-date">OR</span><span class="imp-day-choice-title">\uD83D\uDCC1 Add to an existing trip</span></button>'
+    +'</div>'
+    +'<div class="modal-actions"><button class="small-btn" id="imp-save-cancel">Cancel</button></div></div>';
+  document.body.appendChild(ov);
+  tap(document.getElementById('imp-save-cancel'),function(){ov.remove();});
+  tap(ov,function(ev){if(ev.target===ov)ov.remove();});
+  tap(document.getElementById('imp-newtrip'),function(){ov.remove();createTripFromImport(withGps);});
+  tap(document.getElementById('imp-existtrip'),function(){ov.remove();chooseExistingTrip(withGps);});
+}
+
+function importDaySpan(withGps){
+  var dates={};
+  withGps.forEach(function(r){if(r.ts)dates[new Date(r.ts).toDateString()]=1;});
+  var n=Object.keys(dates).length;
+  return n<=1?'one day':(n+' days');
+}
+
+// Build a brand-new documented trip from the imported photo clusters
+function createTripFromImport(withGps){
+  var photos=withGps.slice().sort(function(a,b){return (a.ts||0)-(b.ts||0);});
+  // group photos into day-buckets by calendar date
+  var byDay={};
+  photos.forEach(function(r){
+    var key=r.ts?new Date(r.ts).toDateString():'Undated';
+    (byDay[key]=byDay[key]||[]).push(r);
+  });
+  var dayKeys=Object.keys(byDay);
+  // derive trip name/from/to from first & last place we can name via existing reports
+  var firstTs=photos[0].ts?new Date(photos[0].ts):null;
+  var lastTs=photos[photos.length-1].ts?new Date(photos[photos.length-1].ts):null;
+  var fmt=function(d){return d?(d.getMonth()+1)+'/'+d.getDate()+'/'+String(d.getFullYear()).slice(2):'';};
+  var defName='My Ride '+(firstTs?fmt(firstTs):'');
+  var name=prompt('Name this trip:', defName);
+  if(name===null)return; // cancelled
+  if(!name.trim())name=defName;
+
+  var id='trip_'+Date.now();
+  var days=[];
+  dayKeys.forEach(function(key,i){
+    var dphotos=byDay[key];
+    var d=new Date(dphotos[0].ts||Date.now());
+    days.push({
+      id:'day_'+id+'_'+i,
+      date:d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}),
+      title:'Day '+(i+1),
+      stops:[], note:''
+    });
+  });
+  var nd={id:id,name:name,from:(firstTs?fmt(firstTs):''),to:(lastTs?fmt(lastTs):''),
+    startDate:(firstTs?firstTs.toLocaleDateString():''),endDate:(lastTs?lastTs.toLocaleDateString():''),
+    tagline:'Documented from photos',totalMiles:'TBD',nights:Math.max(0,dayKeys.length-1),budget:'',
+    sections:[{id:'ride',label:'The Ride',icon:'\u2192',days:days}],
+    checklist:{bike:[{section:'Bike',items:[]}],gear:[{section:'Gear',items:[]}],pack:[{section:'Packing',items:[]}],admin:[{section:'Admin',items:[]}],daily:[{section:'Daily',items:[]}]}
+  };
+  var trips=getTrips();
+  trips.unshift({id:id,name:name,from:nd.from,to:nd.to,startDate:nd.startDate,endDate:nd.endDate});
+  saveTrips(trips); saveTD(id,nd);
+  // attach photos to their day buckets
+  var photoStore={};
+  dayKeys.forEach(function(key,i){
+    var dayId='day_'+id+'_'+i;
+    photoStore[dayId]=byDay[key].map(function(r){
+      return {data:r.data,name:r.name||'',ts:r.ts||Date.now(),lat:r.lat,lng:r.lng,caption:''};
+    });
+  });
+  try{ savePhotos(id,photoStore); }
+  catch(err){ alert('Storage is full — too many photos to save on this device. Try fewer photos.'); return; }
+  // open the new trip
+  var ov=document.createElement('div');ov.className='modal-overlay open';
+  ov.innerHTML='<div class="modal"><div class="modal-title">Trip Created \u2713</div>'
+    +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px"><b style="color:var(--white)">'+e(name)+'</b> created with '+photos.length+' photo'+(photos.length===1?'':'s')+' across '+dayKeys.length+' day'+(dayKeys.length===1?'':'s')+'.</p>'
+    +'<div class="modal-actions"><button class="small-btn amber" id="imp-newtrip-go">Open Trip</button></div></div>';
+  document.body.appendChild(ov);
+  tap(document.getElementById('imp-newtrip-go'),function(){ov.remove();openTrip(id);});
+  tap(ov,function(ev){if(ev.target===ov)ov.remove();});
+}
+
+// Choose among existing trips, then pick a day in that trip
+function chooseExistingTrip(withGps){
+  var trips=getTrips();
+  if(!trips.length){alert('No existing trips yet — create one from these photos instead.');return;}
+  var ov=document.createElement('div');ov.className='modal-overlay open';ov.id='imp-save-modal';
+  var rows=trips.map(function(t){
+    return '<button class="imp-day-choice" data-tripid="'+e(t.id)+'"><span class="imp-day-choice-date">'+e(t.from||'')+(t.to?' \u2192 '+e(t.to):'')+'</span><span class="imp-day-choice-title">'+e(t.name||'(untitled trip)')+'</span></button>';
+  }).join('');
+  ov.innerHTML='<div class="modal"><div class="modal-title">Add to which trip?</div>'
+    +'<div class="imp-day-list">'+rows+'</div>'
+    +'<div class="modal-actions"><button class="small-btn" id="imp-exist-cancel">Cancel</button></div></div>';
+  document.body.appendChild(ov);
+  tap(document.getElementById('imp-exist-cancel'),function(){ov.remove();});
+  tap(ov,function(ev){if(ev.target===ov)ov.remove();});
+  ov.querySelectorAll('.imp-day-choice').forEach(function(btn){
+    tap(btn,function(){ov.remove();pickDayInTrip(btn.getAttribute('data-tripid'),withGps);});
+  });
+}
+
+function pickDayInTrip(tripId,withGps){
+  var data=getTD(tripId);if(!data){alert('Could not open that trip.');return;}
+  var allDays=getAllDays(data);
+  var ov=document.createElement('div');ov.className='modal-overlay open';ov.id='imp-save-modal';
+  var daysHtml=allDays.map(function(d){
+    return '<button class="imp-day-choice" data-dayid="'+e(d.id)+'"><span class="imp-day-choice-date">'+e(d.date||'')+'</span><span class="imp-day-choice-title">'+e(d.title||'(untitled day)')+'</span></button>';
+  }).join('');
+  ov.innerHTML='<div class="modal"><div class="modal-title">Which day?</div>'
+    +'<div class="imp-day-list">'+(daysHtml||'<div style="color:var(--smoke);font-size:13px;padding:8px 0">This trip has no days yet.</div>')+'</div>'
+    +'<div class="modal-actions"><button class="small-btn" id="imp-day-cancel">Cancel</button></div></div>';
+  document.body.appendChild(ov);
+  tap(document.getElementById('imp-day-cancel'),function(){ov.remove();});
+  tap(ov,function(ev){if(ev.target===ov)ov.remove();});
+  ov.querySelectorAll('.imp-day-choice').forEach(function(btn){
+    tap(btn,function(){saveImportToDay(btn.getAttribute('data-dayid'),withGps,ov,tripId);});
+  });
+}
+
+function saveImportToDay(dayId,withGps,modalEl,tripId){
+  tripId=tripId||ST.tripId;
+  var photos=getPhotos(tripId);
+  if(!photos[dayId])photos[dayId]=[];
+  // de-dup against what's already on that day by name+ts
+  var have={};
+  photos[dayId].forEach(function(p){have[(p.name||'')+':'+(p.ts||0)]=true;});
+  var added=0;
+  // sort by timestamp so they land in ride order
+  withGps.slice().sort(function(a,b){return (a.ts||0)-(b.ts||0);}).forEach(function(r){
+    var key=(r.name||'')+':'+(r.ts||0);
+    if(have[key])return;
+    have[key]=true;
+    photos[dayId].push({data:r.data,name:r.name||'',ts:r.ts||Date.now(),lat:r.lat,lng:r.lng,caption:''});
+    added++;
+  });
+  try{
+    savePhotos(tripId,photos);
+  }catch(err){
+    alert('Storage is full — too many photos saved on this device. Try saving fewer at a time, or remove older photos.');
+    return;
+  }
+  if(modalEl)modalEl.remove();
+  // Confirm + offer to jump to the Journal
+  var data=getTD(tripId),day=getDayById(data,dayId);
+  var ov=document.createElement('div');ov.className='modal-overlay open';
+  ov.innerHTML='<div class="modal"><div class="modal-title">Saved \u2713</div>'
+    +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:6px">'+added+' photo'+(added===1?'':'s')+' saved to <b style="color:var(--white)">'+e(day.title||day.date||'that day')+'</b> in your Journal.</p>'
+    +(added<withGps.length?'<p style="font-size:12px;color:var(--smoke);margin-bottom:10px">'+(withGps.length-added)+' were already on that day and were skipped.</p>':'')
+    +'<div class="modal-actions"><button class="small-btn" id="imp-saved-stay">Keep Importing</button><button class="small-btn amber" id="imp-saved-go">Open Trip</button></div></div>';
+  document.body.appendChild(ov);
+  tap(document.getElementById('imp-saved-stay'),function(){ov.remove();});
+  tap(document.getElementById('imp-saved-go'),function(){ov.remove();openTrip(tripId);});
+  tap(ov,function(ev){if(ev.target===ov)ov.remove();});
 }
 
 // allow either escaped or raw HTML in diagnostic values; for plain text fields use escAttr
