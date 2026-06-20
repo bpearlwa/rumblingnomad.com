@@ -613,11 +613,8 @@ function getOdo(id){return S.get('rn_odo_'+id)||{};}
 function saveOdo(id,d){S.set('rn_odo_'+id,d);}
 
 function initDefault(){
-  var trips=getTrips();
-  if(!trips.find(function(t){return t.id===DT.id;})){
-    trips.unshift({id:DT.id,name:DT.name,from:DT.from,to:DT.to,startDate:DT.startDate,endDate:DT.endDate});
-    saveTrips(trips);saveTD(DT.id,JSON.parse(JSON.stringify(DT)));
-  }
+  // Home screen starts clean — trips are created by the user (from photos or manually).
+  // The old hardcoded Durango demo trip is no longer auto-seeded.
 }
 
 function shareUrl(id){return window.location.href.split('?')[0].split('#')[0]+'?trip='+encodeURIComponent(id);}
@@ -971,7 +968,8 @@ function renderOverview(data){
     +'<div class="tip info"><b>Million Dollar Highway (US-550)</b> — Rally Day 1. North to Ouray, then southbound back. Mountain wall on LEFT all the way down Red Mountain Pass.</div>'
     +'<div class="tip good"><b>Monument Valley</b> — Jun 14 dedicated overnight. Golden hour on the Mittens.</div>'
     +'<div class="tip critical"><b>Book NOW</b> — Moab, Page, and Monument Valley fill up in June weeks in advance.</div>'
-    +'<div class="tip critical"><b>Notify your bank</b> — Flag WA, ID, UT, CO, AZ, NV before leaving.</div>';
+    +'<div class="tip critical"><b>Notify your bank</b> — Flag WA, ID, UT, CO, AZ, NV before leaving.</div>'
+    +'<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--asphalt-3)"><button class="small-btn red" id="btn-delete-trip" style="width:100%;justify-content:center">🗑 Delete This Trip</button></div>';
   tap(document.getElementById('btn-edit-trip-info'),function(){
     document.getElementById('modal-trip-title').textContent='Edit Trip Info';
     document.getElementById('btn-save-trip').textContent='Save Changes';
@@ -981,6 +979,24 @@ function renderOverview(data){
     document.getElementById('btn-save-trip')._mode='edit';document.getElementById('btn-save-trip')._id=data.id;
     openModal('modal-trip');
   });
+  tap(document.getElementById('btn-delete-trip'),function(){
+    if(!confirm('Delete "'+(data.name||'this trip')+'"?\n\nThis removes the trip and all its photos, journal notes, checklists, and odometer data from this device. This cannot be undone.'))return;
+    deleteTrip(data.id);
+  });
+}
+
+// Remove a trip and all its associated stored data, then return home
+function deleteTrip(id){
+  // remove from the trips list
+  var trips=getTrips().filter(function(t){return t.id!==id;});
+  saveTrips(trips);
+  // remove all per-trip stored data
+  S.del('rn_td_'+id);
+  S.del('rn_ch_'+id);
+  S.del('rn_jrn_'+id);
+  S.del('rn_ph_'+id);
+  S.del('rn_odo_'+id);
+  renderHome();
 }
 
 // ── Section ───────────────────────────────────────────────
