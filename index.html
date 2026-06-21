@@ -87,6 +87,11 @@ html,body{height:100%;height:100dvh;background:var(--asphalt);color:var(--white)
 .photo-viewer-img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:4px}
 .photo-viewer-actions{display:flex;gap:10px;margin-top:16px;padding:0 16px}
 .photo-viewer-caption{font-size:13px;color:var(--smoke-light);margin-top:8px;text-align:center;padding:0 20px;line-height:1.5}
+.pv-caption-edit{width:calc(100% - 32px);max-width:440px;margin:14px 16px 0;background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:8px;color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:10px 12px;outline:none;resize:none;min-height:60px;line-height:1.5}
+.pv-caption-edit:focus{border-color:var(--amber-dim)}
+.pv-caption-edit::placeholder{color:var(--smoke)}
+.pv-caption-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke);margin:14px 16px 0;width:calc(100% - 32px);max-width:440px;text-align:left}
+.pv-saved-flash{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--green);text-align:center;margin-top:6px;height:14px;letter-spacing:.05em;text-transform:uppercase}
 .pv-close{position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--white);font-size:24px;cursor:pointer;padding:4px}
 .share-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border:none}
 .share-btn.fb{background:#1877f2;color:#fff}
@@ -201,6 +206,8 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .journal-note-input::placeholder{color:var(--smoke)}
 .j-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px}
 .j-photo-thumb{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;cursor:pointer;display:block}
+.j-photo-cell{position:relative}
+.j-photo-cap-badge{position:absolute;bottom:3px;right:3px;background:rgba(245,158,11,.92);color:#0f0f0f;font-size:10px;line-height:1;padding:2px 3px;border-radius:3px;pointer-events:none}
 .j-photo-add{width:100%;aspect-ratio:1;background:var(--asphalt-3);border:1px dashed var(--asphalt-4);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--smoke);font-size:22px}
 .j-photo-add:active{border-color:var(--amber);color:var(--amber)}
 .j-share-row{display:flex;gap:8px;flex-wrap:wrap}
@@ -328,6 +335,7 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
     <div id="view-home" class="panel active" style="padding-top:14px">
       <div id="trip-list"></div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+        <button class="add-row-btn" id="btn-photo-trip" style="border-color:#22c55e;color:#22c55e;padding:14px;font-size:14px;border-style:solid">📷 Start a Trip from Photos</button>
         <button class="add-row-btn" id="btn-ai-trip" style="border-color:#f59e0b;color:#f59e0b;padding:12px">✨ Plan a Trip with AI</button>
         <button class="add-row-btn" id="btn-new-trip" style="font-size:11px">+ Build Trip Manually</button>
       </div>
@@ -349,6 +357,9 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 <div class="photo-viewer" id="photo-viewer">
   <button class="pv-close" id="pv-close">✕</button>
   <img class="photo-viewer-img" id="pv-img" src="" alt="">
+  <div class="pv-caption-label">Caption this photo</div>
+  <textarea class="pv-caption-edit" id="pv-caption-edit" placeholder="What's happening here? (e.g. 'Sunset at the rim — worth every mile')"></textarea>
+  <div class="pv-saved-flash" id="pv-saved-flash"></div>
   <div class="photo-viewer-caption" id="pv-caption"></div>
   <div class="photo-viewer-actions" id="pv-actions"></div>
 </div>
@@ -403,6 +414,7 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 
 <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none">
 <input type="file" id="imp-file-input" accept="image/*" multiple style="display:none">
+<input type="file" id="home-photo-input" accept="image/*" multiple style="display:none">
 
 <!-- EXIF parsing for photo import -->
 <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
@@ -1031,7 +1043,7 @@ function renderJournal(data){
       +'<div class="j-weather" id="jw-'+e(day.id)+'"><div class="j-weather-icon">☁</div><div class="j-weather-info"><div class="j-weather-loc">Tap to load weather</div><div class="j-weather-desc">for '+e(day.title)+'</div></div><button class="j-weather-btn" data-loadweather="'+e(day.id)+'" data-city="'+e(day.title)+'">Load</button></div>'
       +'<div style="margin-bottom:6px;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke)">Photos ('+dayPhotos.length+')</div>'
       +'<div class="j-photo-grid" id="pg-'+e(day.id)+'">';
-    dayPhotos.forEach(function(ph,pi){html+='<img class="j-photo-thumb" src="'+ph.data+'" data-viewphoto="'+e(day.id)+'" data-photoidx="'+pi+'" alt="">';});
+    dayPhotos.forEach(function(ph,pi){var hasCap=ph.caption&&ph.caption.trim();html+='<div class="j-photo-cell"><img class="j-photo-thumb" src="'+ph.data+'" data-viewphoto="'+e(day.id)+'" data-photoidx="'+pi+'" alt="">'+(hasCap?'<span class="j-photo-cap-badge">✎</span>':'')+'</div>';});
     html+='<div class="j-photo-add" data-addphoto="'+e(day.id)+'"><span>+</span></div></div>'
       +'<div class="j-share-row"><button class="share-btn fb" data-sharefb="'+e(day.id)+'" style="width:100%;justify-content:center">📤 Share This Day</button></div></div></div>';
   });
@@ -1075,7 +1087,23 @@ function openPhotoViewer(dayId,idx){
   var photos=getPhotos(ST.tripId),dayPhotos=photos[dayId]||[];if(!dayPhotos[idx])return;
   ST.pvDayId=dayId;ST.pvPhotoIdx=idx;
   document.getElementById('pv-img').src=dayPhotos[idx].data;
-  var jrn=getJournal(ST.tripId);document.getElementById('pv-caption').textContent=(jrn[dayId]&&jrn[dayId].note)||'';
+  // Per-photo caption editor
+  var capEdit=document.getElementById('pv-caption-edit');
+  capEdit.value=dayPhotos[idx].caption||'';
+  var flash=document.getElementById('pv-saved-flash');if(flash)flash.textContent='';
+  // Save on input (debounced) and on blur
+  var saveCaption=function(){
+    var ph=getPhotos(ST.tripId);
+    if(ph[dayId]&&ph[dayId][idx]){
+      ph[dayId][idx].caption=capEdit.value;
+      try{savePhotos(ST.tripId,ph);if(flash){flash.textContent='Saved ✓';setTimeout(function(){if(flash)flash.textContent='';},1500);}}
+      catch(err){if(flash)flash.textContent='Storage full';}
+    }
+  };
+  capEdit.oninput=function(){clearTimeout(capEdit._t);capEdit._t=setTimeout(saveCaption,600);};
+  capEdit.onblur=saveCaption;
+  // The old read-only day-note line stays hidden now that we have per-photo captions
+  document.getElementById('pv-caption').textContent='';
   var actions=document.getElementById('pv-actions');actions.innerHTML='';
   var delBtn=document.createElement('button');delBtn.className='share-btn native';delBtn.textContent='🗑 Delete';
   tap(delBtn,function(){if(!confirm('Delete this photo?'))return;var ph2=getPhotos(ST.tripId);ph2[dayId].splice(idx,1);savePhotos(ST.tripId,ph2);document.getElementById('photo-viewer').classList.remove('open');renderJournal(getTD(ST.tripId));});
@@ -1184,7 +1212,19 @@ function renderBook(data){
     html+='<div style="background:#1a1a1a;border:1px solid #242424;border-radius:10px;margin-bottom:10px;overflow:hidden"><div style="padding:12px 14px 10px;border-bottom:1px solid #242424;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#555">'+e(day.date)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:600;color:#f5f5f0;flex:1">'+e(day.title)+'</div>'+(dayMiles>0?'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:#f59e0b">'+dayMiles+' mi</div>':day.miles?'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:#555">'+e(day.miles)+'</div>':'')+'</div><div style="padding:10px 14px 12px">';
     if(day.stops&&day.stops.length){html+='<div style="margin-bottom:10px">';day.stops.forEach(function(s){html+='<div style="display:flex;gap:6px;align-items:baseline;margin-bottom:3px"><div style="width:5px;height:5px;border-radius:50%;background:'+e(s.c||'#888')+';flex-shrink:0;margin-top:5px"></div><div style="font-size:12px;color:#888;line-height:1.4">'+e(s.n)+'</div></div>';});html+='</div>';}
     if(dayJrn.note)html+='<div style="background:#0f0f0f;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:10px;font-size:13px;color:#bbb;line-height:1.6;font-style:italic;white-space:pre-wrap">'+e(dayJrn.note)+'</div>';
-    if(dayPhotos.length>0){var cols=dayPhotos.length===1?1:dayPhotos.length===2?2:3;html+='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:3px;border-radius:6px;overflow:hidden">';dayPhotos.forEach(function(ph){html+='<img src="'+ph.data+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" alt="">';});html+='</div>';}
+    if(dayPhotos.length>0){
+      var anyCap=dayPhotos.some(function(ph){return ph.caption&&ph.caption.trim();});
+      if(anyCap){
+        // caption layout: each photo with its note beneath
+        html+='<div style="display:flex;flex-direction:column;gap:8px">';
+        dayPhotos.forEach(function(ph){
+          html+='<div><img src="'+ph.data+'" style="width:100%;border-radius:6px;display:block" alt="">'+(ph.caption&&ph.caption.trim()?'<div style="font-size:12px;color:#bbb;line-height:1.5;font-style:italic;padding:5px 2px 0">'+e(ph.caption)+'</div>':'')+'</div>';
+        });
+        html+='</div>';
+      }else{
+        var cols=dayPhotos.length===1?1:dayPhotos.length===2?2:3;html+='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:3px;border-radius:6px;overflow:hidden">';dayPhotos.forEach(function(ph){html+='<img src="'+ph.data+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" alt="">';});html+='</div>';
+      }
+    }
     else html+='<div style="text-align:center;padding:16px;color:#333;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase">No photos this day</div>';
     html+='</div></div>';
   });
@@ -1209,7 +1249,18 @@ function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhot
     if(day.stops&&day.stops.length){html+='<div style="margin-bottom:16px">';day.stops.forEach(function(s){html+='<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px"><div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:5px"></div><div style="font-size:13px;color:#444;line-height:1.5">'+e(s.n)+(s.t?'<span style="color:#999"> — '+e(s.t)+'</span>':'')+'</div></div>';});html+='</div>';}
     if(dayJrn.note)html+='<div style="border-left:3px solid #f59e0b;padding:10px 14px;margin-bottom:16px;background:#fffdf5;font-size:14px;color:#333;line-height:1.7;font-style:italic;white-space:pre-wrap">'+e(dayJrn.note)+'</div>';
     if(day.hotel)html+='<div style="font-size:12px;color:#999;margin-bottom:16px">🏨 '+e(day.hotel)+'</div>';
-    if(dayPhotos.length>0){var cols=dayPhotos.length===1?1:dayPhotos.length<=4?2:3;html+='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:4px;border-radius:4px;overflow:hidden">';dayPhotos.forEach(function(ph){html+='<img src="'+ph.data+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" alt="">';});html+='</div>';}
+    if(dayPhotos.length>0){
+      var anyCapP=dayPhotos.some(function(ph){return ph.caption&&ph.caption.trim();});
+      if(anyCapP){
+        html+='<div style="display:flex;flex-direction:column;gap:14px">';
+        dayPhotos.forEach(function(ph){
+          html+='<div><img src="'+ph.data+'" style="width:100%;border-radius:4px;display:block" alt="">'+(ph.caption&&ph.caption.trim()?'<div style="font-size:13px;color:#555;line-height:1.6;font-style:italic;padding:6px 2px 0">'+e(ph.caption)+'</div>':'')+'</div>';
+        });
+        html+='</div>';
+      }else{
+        var cols=dayPhotos.length===1?1:dayPhotos.length<=4?2:3;html+='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:4px;border-radius:4px;overflow:hidden">';dayPhotos.forEach(function(ph){html+='<img src="'+ph.data+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" alt="">';});html+='</div>';
+      }
+    }
     html+='</div>';
   });
   html+='<div class="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;border:3px solid #f59e0b;border-radius:4px;position:relative;padding:60px 40px"><div style="position:absolute;top:16px;left:16px;width:24px;height:24px;border-top:2px solid #f59e0b;border-left:2px solid #f59e0b"></div><div style="position:absolute;top:16px;right:16px;width:24px;height:24px;border-top:2px solid #f59e0b;border-right:2px solid #f59e0b"></div><div style="position:absolute;bottom:16px;left:16px;width:24px;height:24px;border-bottom:2px solid #f59e0b;border-left:2px solid #f59e0b"></div><div style="position:absolute;bottom:16px;right:16px;width:24px;height:24px;border-bottom:2px solid #f59e0b;border-right:2px solid #f59e0b"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:#aaa;margin-bottom:24px">Certificate of Achievement</div><div style="font-size:48px;margin-bottom:16px">🏍</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:#666;margin-bottom:8px">This certifies that</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:48px;letter-spacing:.06em;color:#111;margin-bottom:8px">Brad Pearl</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:#666;margin-bottom:20px">successfully completed the motorcycle journey</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:32px;letter-spacing:.04em;color:#f59e0b;margin-bottom:4px">'+e(data.from)+' → '+e(data.to)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;color:#999;margin-bottom:24px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="width:100px;height:1px;background:#ddd;margin:0 auto 24px"></div><div style="display:flex;gap:48px;margin-bottom:32px"><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b">'+certMiles+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Miles Ridden</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b">'+allDays.length+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Days on Road</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b">'+totalPhotos+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Moments Captured</div></div></div><div style="width:200px;height:1px;background:#ddd;margin:0 auto 12px"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#bbb">Rumbling Nomad</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;color:#ddd;margin-top:4px">rumblingnomad.com</div></div></body></html>';
@@ -1418,6 +1469,64 @@ function importDaySpan(withGps){
   withGps.forEach(function(r){if(r.ts)dates[new Date(r.ts).toDateString()]=1;});
   var n=Object.keys(dates).length;
   return n<=1?'one day':(n+' days');
+}
+
+// Home-screen "Start a Trip from Photos" — reads photos then creates a trip directly.
+// Supports batching: each pick adds to HOME_IMPORT before the user finalizes.
+var HOME_IMPORT={reports:[]};
+function startHomePhotoTrip(){
+  HOME_IMPORT.reports=[];
+  var inp=document.getElementById('home-photo-input');
+  inp.value='';inp.click();
+}
+function handleHomePhotoFiles(files){
+  if(!files||!files.length)return;
+  var batchSize=files.length;
+  // progress overlay
+  var ov=document.getElementById('home-import-modal');
+  if(ov)ov.remove();
+  ov=document.createElement('div');ov.className='modal-overlay open';ov.id='home-import-modal';
+  ov.innerHTML='<div class="modal"><div class="modal-title">Reading Photos</div>'
+    +'<div class="imp-status"><div class="spinner"></div><div class="imp-status-text" id="home-imp-status">Reading '+batchSize+' photo'+(batchSize>1?'s':'')+'\u2026</div></div></div>';
+  document.body.appendChild(ov);
+  var read=0,newReports=new Array(batchSize),arr=Array.from(files);
+  var jobs=arr.map(function(file,idx){
+    return Promise.all([readExifFull(file),fileToDataUrl(file)]).then(function(pair){
+      read++;var st=document.getElementById('home-imp-status');
+      if(st)st.textContent='Reading photos\u2026 '+read+' of '+batchSize;
+      var info=pair[0]||{},dataUrl=pair[1];
+      newReports[idx]={name:file.name||'',size:file.size||0,
+        hasGps:typeof info.lat==='number'&&typeof info.lng==='number',
+        lat:info.lat,lng:info.lng,ts:info.ts||0,data:dataUrl};
+    }).catch(function(){read++;});
+  });
+  Promise.all(jobs).then(function(){
+    // accumulate, de-duped by name+size
+    var have={};HOME_IMPORT.reports.forEach(function(r){have[r.name+':'+r.size]=true;});
+    newReports.forEach(function(r){if(!r)return;var k=r.name+':'+r.size;if(have[k])return;have[k]=true;HOME_IMPORT.reports.push(r);});
+    var withGps=HOME_IMPORT.reports.filter(function(r){return r.hasGps;});
+    if(ov)ov.remove();
+    // show a summary + choice: add more, or create the trip
+    var m=document.createElement('div');m.className='modal-overlay open';m.id='home-import-modal';
+    var noGps=HOME_IMPORT.reports.length-withGps.length;
+    m.innerHTML='<div class="modal"><div class="modal-title">'+withGps.length+' Photo'+(withGps.length===1?'':'s')+' Ready</div>'
+      +'<p style="font-size:13px;color:var(--smoke);line-height:1.6;margin-bottom:6px">'+withGps.length+' photo'+(withGps.length===1?'':'s')+' with location, spanning '+importDaySpan(withGps)+'.</p>'
+      +(noGps>0?'<p style="font-size:12px;color:var(--smoke);margin-bottom:10px">'+noGps+' had no location and won\u2019t be placed on the map (they can still be added later).</p>':'')
+      +'<div class="imp-day-list">'
+      +'  <button class="imp-day-choice" id="home-imp-create"><span class="imp-day-choice-date">CREATE</span><span class="imp-day-choice-title">\uD83C\uDFCD\uFE0F Create my trip from these '+withGps.length+'</span></button>'
+      +'  <button class="imp-day-choice" id="home-imp-more"><span class="imp-day-choice-date">ADD MORE</span><span class="imp-day-choice-title">\uD83D\uDCF7 Pick more photos first</span></button>'
+      +'</div>'
+      +'<div class="modal-actions"><button class="small-btn" id="home-imp-cancel">Cancel</button></div></div>';
+    document.body.appendChild(m);
+    tap(document.getElementById('home-imp-cancel'),function(){m.remove();HOME_IMPORT.reports=[];});
+    tap(document.getElementById('home-imp-more'),function(){m.remove();var inp=document.getElementById('home-photo-input');inp.value='';inp.click();});
+    tap(document.getElementById('home-imp-create'),function(){
+      m.remove();
+      if(!withGps.length){alert('None of these photos have location data, so a map-based trip can\u2019t be built from them. Try importing originals straight from your Photos library.');HOME_IMPORT.reports=[];return;}
+      createTripFromImport(withGps);
+      HOME_IMPORT.reports=[];
+    });
+  });
 }
 
 // Build a brand-new documented trip from the imported photo clusters
@@ -1707,6 +1816,8 @@ document.addEventListener('DOMContentLoaded',function(){
     handleImportFiles(ev.target.files);
   });
   tap(document.getElementById('pv-close'),function(){document.getElementById('photo-viewer').classList.remove('open');});
+  tap(document.getElementById('btn-photo-trip'),function(){startHomePhotoTrip();});
+  document.getElementById('home-photo-input').addEventListener('change',function(ev){handleHomePhotoFiles(ev.target.files);});
   tap(document.getElementById('btn-ai-trip'),function(){openAIPlanner();});
   tap(document.getElementById('btn-new-trip'),function(){
     document.getElementById('modal-trip-title').textContent='New Trip';document.getElementById('btn-save-trip').textContent='Create Trip';
