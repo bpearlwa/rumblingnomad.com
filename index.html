@@ -447,6 +447,7 @@ var _m={};
 var S={
   get:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return _m[k]||null}},
   set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){_m[k]=v}},
+  setStrict:function(k,v){localStorage.setItem(k,JSON.stringify(v));}, // throws on quota — used for photos
   del:function(k){try{localStorage.removeItem(k)}catch(e){delete _m[k]}}
 };
 
@@ -620,7 +621,7 @@ function saveChecks(id,d){S.set('rn_ch_'+id,d);}
 function getJournal(id){return S.get('rn_jrn_'+id)||{};}
 function saveJournal(id,d){S.set('rn_jrn_'+id,d);}
 function getPhotos(id){return S.get('rn_ph_'+id)||{};}
-function savePhotos(id,d){S.set('rn_ph_'+id,d);}
+function savePhotos(id,d){S.setStrict('rn_ph_'+id,d);}
 function getOdo(id){return S.get('rn_odo_'+id)||{};}
 function saveOdo(id,d){S.set('rn_odo_'+id,d);}
 
@@ -966,21 +967,34 @@ function showTab(tid,data){
 // ── Overview ──────────────────────────────────────────────
 function renderOverview(data){
   var el=document.getElementById('panel-overview');
-  el.innerHTML='<div class="intro-card"><div class="intro-route">'+e(data.from)+' <span>→</span> '+e(data.to)+'</div>'
-    +'<div class="intro-dates">'+e(data.startDate)+' – '+e(data.endDate)+'</div>'
-    +'<div class="intro-tags"><span class="intro-tag">'+e(data.tagline||'')+'</span></div></div>'
+  // Build dynamic highlights from THIS trip's own days/stops — no hardcoded Durango content
+  var allDays=getAllDays(data);
+  var highlightsHtml='';
+  // Pull any stops the user (or import) created, show up to 5 as highlights
+  var stopTips=[];
+  allDays.forEach(function(day){
+    (day.stops||[]).forEach(function(s){if(s.n)stopTips.push({day:day,stop:s});});
+  });
+  if(stopTips.length){
+    stopTips.slice(0,6).forEach(function(t){
+      highlightsHtml+='<div class="tip"><b>'+e(t.stop.n)+'</b>'+(t.stop.t?' — '+e(t.stop.t):'')+(t.day.date?' <span style="color:var(--smoke)">('+e(t.day.date)+')</span>':'')+'</div>';
+    });
+  }else{
+    // No stops yet — give a real, trip-specific prompt instead of fake tips
+    var dayCount=allDays.length;
+    highlightsHtml='<div class="tip info">This trip has '+dayCount+' day'+(dayCount===1?'':'s')+' so far. Open the <b>Journal</b> to add notes and photos, or <b>Organize</b> to import more photos and let them sort into stops.</div>';
+    highlightsHtml+='<div class="tip">Tip: add stops to any day from <b>The Ride</b> tab and they\u2019ll show up here as highlights.</div>';
+  }
+  // Stats reflect the real trip
+  var photoCount=0;var ph=getPhotos(data.id);Object.keys(ph).forEach(function(k){photoCount+=(ph[k]||[]).length;});
+  el.innerHTML='<div class="intro-card"><div class="intro-route">'+e(data.from||'Start')+' <span>→</span> '+e(data.to||'End')+'</div>'
+    +'<div class="intro-dates">'+e(data.startDate||'')+(data.endDate?' – '+e(data.endDate):'')+'</div>'
+    +'<div class="intro-tags"><span class="intro-tag">'+e(data.tagline||'Your ride')+'</span></div></div>'
     +'<div class="stat-grid"><div class="stat"><div class="stat-label">Miles</div><div class="stat-val">'+e(data.totalMiles||'TBD')+'</div></div>'
-    +'<div class="stat"><div class="stat-label">Nights</div><div class="stat-val">'+e(data.nights||0)+'</div></div>'
-    +'<div class="stat"><div class="stat-label">Budget</div><div class="stat-val" style="font-size:17px">'+e(data.budget||'')+'</div></div></div>'
-    +'<div class="timeline"><div class="tseg" style="flex:4;background:#92600a;color:#fef3c7">Ride Down ↓</div>'
-    +'<div class="tseg" style="flex:4;background:#14532d;color:#d1fae5">Base Camp</div>'
-    +'<div class="tseg" style="flex:5;background:#78350f;color:#fef3c7">Return ↑</div></div>'
+    +'<div class="stat"><div class="stat-label">Days</div><div class="stat-val">'+allDays.length+'</div></div>'
+    +'<div class="stat"><div class="stat-label">Photos</div><div class="stat-val">'+photoCount+'</div></div></div>'
     +'<div class="sec-header">Highlights <button class="small-btn" id="btn-edit-trip-info" style="font-size:11px;padding:4px 8px">Edit Trip</button></div>'
-    +'<div class="tip good"><b>Devil\'s Highway (US-491)</b> — Day 4. Blanding → Bluff → Cortez into Durango. Remote, raw, almost no traffic.</div>'
-    +'<div class="tip info"><b>Million Dollar Highway (US-550)</b> — Rally Day 1. North to Ouray, then southbound back. Mountain wall on LEFT all the way down Red Mountain Pass.</div>'
-    +'<div class="tip good"><b>Monument Valley</b> — Jun 14 dedicated overnight. Golden hour on the Mittens.</div>'
-    +'<div class="tip critical"><b>Book NOW</b> — Moab, Page, and Monument Valley fill up in June weeks in advance.</div>'
-    +'<div class="tip critical"><b>Notify your bank</b> — Flag WA, ID, UT, CO, AZ, NV before leaving.</div>'
+    +highlightsHtml
     +'<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--asphalt-3)"><button class="small-btn red" id="btn-delete-trip" style="width:100%;justify-content:center">🗑 Delete This Trip</button></div>';
   tap(document.getElementById('btn-edit-trip-info'),function(){
     document.getElementById('modal-trip-title').textContent='Edit Trip Info';
@@ -1034,6 +1048,19 @@ function renderJournal(data){
   var jrn=getJournal(ST.tripId),odo=getOdo(ST.tripId),photos=getPhotos(ST.tripId);
   var allDays=[];data.sections.forEach(function(sec){sec.days.forEach(function(day){allDays.push({day:day,secId:sec.id});});});
   var html='<div class="sec-header">Trip Journal</div>';
+  // ── TEMP DIAGNOSTIC — shows what's actually in storage so we can see the real state ──
+  var diagPhotoKeys=Object.keys(photos);
+  var diagTotal=0;diagPhotoKeys.forEach(function(k){diagTotal+=(photos[k]||[]).length;});
+  var dayIdList=allDays.map(function(en){return en.day.id;});
+  var keysMatch=dayIdList.filter(function(d){return photos[d]&&photos[d].length;}).length;
+  html+='<div style="background:#2e1a0a;border:1px solid #92600a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#fcd34d;line-height:1.6;font-family:monospace;word-break:break-all">'
+    +'<b>DIAGNOSTIC</b><br>'
+    +'Trip ID: '+e(ST.tripId)+'<br>'
+    +'Photos in storage: <b>'+diagTotal+'</b> across '+diagPhotoKeys.length+' day-key(s)<br>'
+    +'Photo storage keys: '+(diagPhotoKeys.length?e(diagPhotoKeys.join(' | ')):'(none)')+'<br>'
+    +'Day IDs in trip: '+e(dayIdList.join(' | '))+'<br>'
+    +'Days with matching photos: <b>'+keysMatch+'</b> of '+dayIdList.length
+    +'</div>';
   allDays.forEach(function(entry){
     var day=entry.day,dayJrn=jrn[day.id]||{},dayOdo=odo[day.id]||{},dayPhotos=photos[day.id]||[];
     var diff=dayOdo.end&&dayOdo.start?(dayOdo.end-dayOdo.start):0;
@@ -1069,15 +1096,13 @@ document.getElementById('photo-file-input').addEventListener('change',function(e
   var files=ev.target.files;if(!files||!files.length||!ST.photoCallback)return;
   var dayId=ST.photoCallback;
   Array.from(files).forEach(function(file){
-    var reader=new FileReader();
-    reader.onload=function(e2){
+    fileToDataUrl(file).then(function(full){return shrinkDataUrl(full);}).then(function(small){
       var photos=getPhotos(ST.tripId);if(!photos[dayId])photos[dayId]=[];
-      photos[dayId].push({data:e2.target.result,name:file.name,ts:Date.now()});
-      try{savePhotos(ST.tripId,photos);}catch(err){alert('Storage full — try removing some photos first.');}
+      photos[dayId].push({data:small,name:file.name,ts:Date.now(),caption:''});
+      try{savePhotos(ST.tripId,photos);}catch(err){alert('Storage full — too many photos on this device. Try removing some first.');return;}
       var grid=document.getElementById('pg-'+dayId);
-      if(grid){var idx=photos[dayId].length-1;var img=document.createElement('img');img.className='j-photo-thumb';img.src=e2.target.result;img.setAttribute('data-viewphoto',dayId);img.setAttribute('data-photoidx',String(idx));tap(img,function(){openPhotoViewer(dayId,idx);});grid.insertBefore(img,grid.querySelector('.j-photo-add'));var countEl=grid.previousElementSibling;if(countEl)countEl.textContent='Photos ('+photos[dayId].length+')';}
-    };
-    reader.readAsDataURL(file);
+      if(grid){var idx=photos[dayId].length-1;var cell=document.createElement('div');cell.className='j-photo-cell';var img=document.createElement('img');img.className='j-photo-thumb';img.src=small;img.setAttribute('data-viewphoto',dayId);img.setAttribute('data-photoidx',String(idx));tap(img,function(){openPhotoViewer(dayId,idx);});cell.appendChild(img);grid.insertBefore(cell,grid.querySelector('.j-photo-add'));var countEl=grid.previousElementSibling;if(countEl)countEl.textContent='Photos ('+photos[dayId].length+')';}
+    });
   });
   ev.target.value='';ST.photoCallback=null;
 });
@@ -1569,24 +1594,48 @@ function createTripFromImport(withGps){
   var trips=getTrips();
   trips.unshift({id:id,name:name,from:nd.from,to:nd.to,startDate:nd.startDate,endDate:nd.endDate});
   saveTrips(trips); saveTD(id,nd);
-  // attach photos to their day buckets
-  var photoStore={};
-  dayKeys.forEach(function(key,i){
-    var dayId='day_'+id+'_'+i;
-    photoStore[dayId]=byDay[key].map(function(r){
-      return {data:r.data,name:r.name||'',ts:r.ts||Date.now(),lat:r.lat,lng:r.lng,caption:''};
+  // attach photos to their day buckets — SHRINK first so they fit in localStorage
+  var shrinkOverlay=document.createElement('div');shrinkOverlay.className='modal-overlay open';shrinkOverlay.id='shrink-overlay';
+  shrinkOverlay.innerHTML='<div class="modal"><div class="modal-title">Saving Photos</div><div class="imp-status"><div class="spinner"></div><div class="imp-status-text">Optimizing '+photos.length+' photo'+(photos.length===1?'':'s')+' for storage\u2026</div></div></div>';
+  document.body.appendChild(shrinkOverlay);
+  shrinkMany(photos).then(function(smallPhotos){
+    // rebuild byDay using the shrunk versions (same order)
+    var smallByDay={};var idx2=0;
+    var photoStore={};
+    dayKeys.forEach(function(key,i){
+      var dayId='day_'+id+'_'+i;
+      var count=byDay[key].length;
+      photoStore[dayId]=[];
+      for(var j=0;j<count;j++){
+        var r=smallPhotos[idx2++];
+        photoStore[dayId].push({data:r.data,name:r.name||'',ts:r.ts||Date.now(),lat:r.lat,lng:r.lng,caption:''});
+      }
     });
+    if(shrinkOverlay)shrinkOverlay.remove();
+    try{
+      savePhotos(id,photoStore);
+    }catch(err){
+      // quota still exceeded even after shrinking — tell the truth, don't pretend it saved
+      var warn=document.createElement('div');warn.className='modal-overlay open';
+      warn.innerHTML='<div class="modal"><div class="modal-title">Photos Too Large</div>'
+        +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">The trip was created, but this device ran out of storage space before all '+photos.length+' photos could be saved. Try creating the trip with fewer photos at a time, or remove some older trips first.</p>'
+        +'<div class="modal-actions"><button class="small-btn amber" id="warn-go">Open Trip Anyway</button></div></div>';
+      document.body.appendChild(warn);
+      tap(document.getElementById('warn-go'),function(){warn.remove();openTrip(id);});
+      tap(warn,function(ev){if(ev.target===warn)warn.remove();});
+      return;
+    }
+    // verify the photos actually persisted (not silently dropped)
+    var check=getPhotos(id),saved=0;
+    Object.keys(check).forEach(function(k){saved+=(check[k]||[]).length;});
+    var ov=document.createElement('div');ov.className='modal-overlay open';
+    ov.innerHTML='<div class="modal"><div class="modal-title">Trip Created \u2713</div>'
+      +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px"><b style="color:var(--white)">'+e(name)+'</b> created with '+saved+' photo'+(saved===1?'':'s')+' across '+dayKeys.length+' day'+(dayKeys.length===1?'':'s')+'.</p>'
+      +'<div class="modal-actions"><button class="small-btn amber" id="imp-newtrip-go">Open Trip</button></div></div>';
+    document.body.appendChild(ov);
+    tap(document.getElementById('imp-newtrip-go'),function(){ov.remove();openTrip(id);});
+    tap(ov,function(ev){if(ev.target===ov)ov.remove();});
   });
-  try{ savePhotos(id,photoStore); }
-  catch(err){ alert('Storage is full — too many photos to save on this device. Try fewer photos.'); return; }
-  // open the new trip
-  var ov=document.createElement('div');ov.className='modal-overlay open';
-  ov.innerHTML='<div class="modal"><div class="modal-title">Trip Created \u2713</div>'
-    +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px"><b style="color:var(--white)">'+e(name)+'</b> created with '+photos.length+' photo'+(photos.length===1?'':'s')+' across '+dayKeys.length+' day'+(dayKeys.length===1?'':'s')+'.</p>'
-    +'<div class="modal-actions"><button class="small-btn amber" id="imp-newtrip-go">Open Trip</button></div></div>';
-  document.body.appendChild(ov);
-  tap(document.getElementById('imp-newtrip-go'),function(){ov.remove();openTrip(id);});
-  tap(ov,function(ev){if(ev.target===ov)ov.remove();});
 }
 
 // Choose among existing trips, then pick a day in that trip
@@ -1627,6 +1676,49 @@ function pickDayInTrip(tripId,withGps){
 }
 
 function saveImportToDay(dayId,withGps,modalEl,tripId){
+  tripId=tripId||ST.tripId;
+  // de-dup, sort, then SHRINK before saving so we don't blow the storage quota
+  var photos=getPhotos(tripId);
+  if(!photos[dayId])photos[dayId]=[];
+  var have={};
+  photos[dayId].forEach(function(p){have[(p.name||'')+':'+(p.ts||0)]=true;});
+  var toAdd=withGps.slice().sort(function(a,b){return (a.ts||0)-(b.ts||0);}).filter(function(r){
+    var key=(r.name||'')+':'+(r.ts||0);if(have[key])return false;have[key]=true;return true;
+  });
+  if(modalEl)modalEl.remove();
+  var shrinkOverlay=document.createElement('div');shrinkOverlay.className='modal-overlay open';
+  shrinkOverlay.innerHTML='<div class="modal"><div class="modal-title">Saving Photos</div><div class="imp-status"><div class="spinner"></div><div class="imp-status-text">Optimizing '+toAdd.length+' photo'+(toAdd.length===1?'':'s')+'\u2026</div></div></div>';
+  document.body.appendChild(shrinkOverlay);
+  shrinkMany(toAdd).then(function(small){
+    var added=0;
+    small.forEach(function(r){
+      photos[dayId].push({data:r.data,name:r.name||'',ts:r.ts||Date.now(),lat:r.lat,lng:r.lng,caption:''});
+      added++;
+    });
+    shrinkOverlay.remove();
+    try{
+      savePhotos(tripId,photos);
+    }catch(err){
+      var warn=document.createElement('div');warn.className='modal-overlay open';
+      warn.innerHTML='<div class="modal"><div class="modal-title">Storage Full</div><p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">This device ran out of space before all the photos could be saved. Try fewer at a time, or remove an older trip.</p><div class="modal-actions"><button class="small-btn amber" id="warn-close">OK</button></div></div>';
+      document.body.appendChild(warn);
+      tap(document.getElementById('warn-close'),function(){warn.remove();openTrip(tripId);});
+      return;
+    }
+    // verify persisted count
+    var check=getPhotos(tripId),savedDay=(check[dayId]||[]).length;
+    var data=getTD(tripId),day=getDayById(data,dayId);
+    var ov=document.createElement('div');ov.className='modal-overlay open';
+    ov.innerHTML='<div class="modal"><div class="modal-title">Saved \u2713</div>'
+      +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:6px">'+added+' photo'+(added===1?'':'s')+' saved to <b style="color:var(--white)">'+e(day.title||day.date||'that day')+'</b> in your Journal.</p>'
+      +'<div class="modal-actions"><button class="small-btn" id="imp-saved-stay">Keep Importing</button><button class="small-btn amber" id="imp-saved-go">Open Trip</button></div></div>';
+    document.body.appendChild(ov);
+    tap(document.getElementById('imp-saved-stay'),function(){ov.remove();});
+    tap(document.getElementById('imp-saved-go'),function(){ov.remove();openTrip(tripId);});
+    tap(ov,function(ev){if(ev.target===ov)ov.remove();});
+  });
+}
+function saveImportToDay_OLD(dayId,withGps,modalEl,tripId){
   tripId=tripId||ST.tripId;
   var photos=getPhotos(tripId);
   if(!photos[dayId])photos[dayId]=[];
@@ -1714,6 +1806,35 @@ function fileToDataUrl(file){
     r.onerror=function(){rej();};
     r.readAsDataURL(file);
   });
+}
+
+// Downscale a data URL so it fits in localStorage. Full-res iPhone photos are
+// ~1-3MB each as base64; localStorage caps near 5MB total. Shrink long edge to
+// ~1280px at JPEG q0.7 → roughly 120-200KB each, which actually persists.
+function shrinkDataUrl(dataUrl,maxEdge,quality){
+  maxEdge=maxEdge||1280;quality=quality||0.7;
+  return new Promise(function(res){
+    try{
+      var img=new Image();
+      img.onload=function(){
+        var w=img.width,h=img.height,scale=Math.min(1,maxEdge/Math.max(w,h));
+        var cw=Math.round(w*scale),ch=Math.round(h*scale);
+        var canvas=document.createElement('canvas');canvas.width=cw;canvas.height=ch;
+        var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,cw,ch);
+        try{res(canvas.toDataURL('image/jpeg',quality));}
+        catch(err){res(dataUrl);} // tainted/edge case — fall back to original
+      };
+      img.onerror=function(){res(dataUrl);};
+      img.src=dataUrl;
+    }catch(err){res(dataUrl);}
+  });
+}
+function shrinkMany(reports){
+  return Promise.all(reports.map(function(r){
+    return shrinkDataUrl(r.data).then(function(small){
+      var copy={};for(var k in r)copy[k]=r[k];copy.data=small;return copy;
+    });
+  }));
 }
 
 function haversine(aLat,aLng,bLat,bLng){
