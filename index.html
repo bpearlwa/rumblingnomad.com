@@ -210,6 +210,14 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .j-photo-cap-badge{position:absolute;bottom:3px;right:3px;background:rgba(245,158,11,.92);color:#0f0f0f;font-size:10px;line-height:1;padding:2px 3px;border-radius:3px;pointer-events:none}
 .j-photo-add{width:100%;aspect-ratio:1;background:var(--asphalt-3);border:1px dashed var(--asphalt-4);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--smoke);font-size:22px}
 .j-photo-add:active{border-color:var(--amber);color:var(--amber)}
+.j-photo-list{display:flex;flex-direction:column;gap:14px;margin-bottom:8px}
+.j-photo-item{background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:8px;overflow:hidden}
+.j-photo-item-img{width:100%;display:block;cursor:pointer;background:var(--asphalt-2)}
+.j-photo-cap-input{background:transparent;border:none;border-top:1px solid var(--asphalt-4);color:var(--white);font-family:'Barlow',sans-serif;font-size:13px;padding:8px 10px;width:100%;outline:none;resize:none;min-height:42px;line-height:1.5}
+.j-photo-cap-input:focus{background:var(--asphalt-2)}
+.j-photo-cap-input::placeholder{color:var(--smoke);font-style:italic}
+.j-photo-add-wide{width:100%;padding:12px;background:transparent;border:1px dashed var(--asphalt-4);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.j-photo-add-wide:active{border-color:var(--amber);color:var(--amber)}
 .j-share-row{display:flex;gap:8px;flex-wrap:wrap}
 .j-weather{display:flex;align-items:center;gap:10px;background:var(--asphalt-3);border-radius:8px;padding:8px 10px;margin-bottom:10px}
 .j-weather-icon{font-size:24px}
@@ -620,8 +628,49 @@ function getChecks(id){return S.get('rn_ch_'+id)||{};}
 function saveChecks(id,d){S.set('rn_ch_'+id,d);}
 function getJournal(id){return S.get('rn_jrn_'+id)||{};}
 function saveJournal(id,d){S.set('rn_jrn_'+id,d);}
-function getPhotos(id){return S.get('rn_ph_'+id)||{};}
-function savePhotos(id,d){S.setStrict('rn_ph_'+id,d);}
+
+// ── Photo storage: IndexedDB (big capacity) with a synchronous in-memory cache ──
+// localStorage caps at ~5MB and was dropping photos. IndexedDB holds hundreds of MB+.
+// To avoid rewriting every photo call site as async, photos for the OPEN trip live in
+// PHOTO_CACHE (synchronous reads), and writes go to the cache immediately + persist to
+// IndexedDB in the background. loadPhotoCache(id) must run before rendering a trip.
+var PHOTO_CACHE={};      // tripId -> { dayId: [ {data,name,ts,caption}, ... ] }
+var IDB_DB=null;
+function idbOpen(){
+  return new Promise(function(res,rej){
+    if(IDB_DB)return res(IDB_DB);
+    if(!window.indexedDB)return rej(new Error('no-idb'));
+    var rq=indexedDB.open('rumbling_nomad',1);
+    rq.onupgradeneeded=function(ev){var db=ev.target.result;if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos');};
+    rq.onsuccess=function(ev){IDB_DB=ev.target.result;res(IDB_DB);};
+    rq.onerror=function(){rej(rq.error);};
+  });
+}
+function idbGet(tripId){
+  return idbOpen().then(function(db){return new Promise(function(res,rej){
+    var tx=db.transaction('photos','readonly'),st=tx.objectStore('photos'),rq=st.get('rn_ph_'+tripId);
+    rq.onsuccess=function(){res(rq.result||{});};rq.onerror=function(){rej(rq.error);};
+  });});
+}
+function idbSet(tripId,data){
+  return idbOpen().then(function(db){return new Promise(function(res,rej){
+    var tx=db.transaction('photos','readwrite'),st=tx.objectStore('photos');
+    st.put(data,'rn_ph_'+tripId);
+    tx.oncomplete=function(){res(true);};tx.onerror=function(){rej(tx.error);};
+  });});
+}
+// Pull a trip's photos from IndexedDB into the synchronous cache. Call before rendering.
+function loadPhotoCache(id){
+  return idbGet(id).then(function(d){PHOTO_CACHE[id]=d||{};return PHOTO_CACHE[id];})
+                   .catch(function(){PHOTO_CACHE[id]=PHOTO_CACHE[id]||{};return PHOTO_CACHE[id];});
+}
+function getPhotos(id){return PHOTO_CACHE[id]||{};}
+// Synchronous to callers: update cache now, persist to IDB in background.
+// Returns a promise so the import flow can confirm a real save and warn only on true failure.
+function savePhotos(id,d){
+  PHOTO_CACHE[id]=d;
+  return idbSet(id,d);
+}
 function getOdo(id){return S.get('rn_odo_'+id)||{};}
 function saveOdo(id,d){S.set('rn_odo_'+id,d);}
 
@@ -945,10 +994,10 @@ function openTrip(id){
   nav.innerHTML='<div class="nav-tab" data-main="overview">Overview</div>'
     +data.sections.map(function(s){return '<div class="nav-tab" data-main="'+s.id+'">'+e(s.label)+'</div>';}).join('')
     +'<div class="nav-tab" data-main="journal">Journal</div>'
+    +'<div class="nav-tab" data-main="book">Trip Book</div>'
     +'<div class="nav-tab" data-main="weather">Weather</div>'
     +'<div class="nav-tab" data-main="checklist">Checklist</div>'
-    +'<div class="nav-tab" data-main="ride">Organize</div>'
-    +'<div class="nav-tab" data-main="book">Trip Book</div>';
+    +'<div class="nav-tab" data-main="ride">Organize</div>';
   nav.querySelectorAll('.nav-tab').forEach(function(tab){tap(tab,function(){showTab(tab.getAttribute('data-main'),data);});});
   var bn=document.getElementById('bottom-nav');bn.style.display='flex';
   bn.innerHTML='<div class="bnav-item" data-main="overview"><div class="bnav-icon">◎</div><div class="bnav-label">Trip</div></div>'
@@ -957,7 +1006,8 @@ function openTrip(id){
     +'<div class="bnav-item" data-main="weather"><div class="bnav-icon">☀</div><div class="bnav-label">Weather</div></div>'
     +'<div class="bnav-item" data-main="checklist"><div class="bnav-icon">✓</div><div class="bnav-label">Checklist</div></div>';
   bn.querySelectorAll('.bnav-item').forEach(function(item){tap(item,function(){showTab(item.getAttribute('data-main'),data);});});
-  showTab('overview',data);
+  // Load this trip's photos from IndexedDB into the cache, THEN render so they appear.
+  loadPhotoCache(id).then(function(){showTab('overview',data);});
 }
 
 function showTab(tid,data){
@@ -1063,12 +1113,18 @@ function renderJournal(data){
     html+='<div class="journal-day"><div class="journal-day-header"><div class="journal-day-date">'+e(day.date)+'</div><div class="journal-day-title">'+e(day.title)+'</div></div><div class="journal-day-body">'
       +'<div style="margin-bottom:4px;font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--smoke)">Odometer '+(dayOdo.est?'<span style="color:var(--amber-dim);font-weight:400;text-transform:none;letter-spacing:0">— estimated from photos, tap to correct</span>':'<span style="color:var(--asphalt-4);font-weight:400;text-transform:none;letter-spacing:0">— optional, for mileage tracking</span>')+'</div>'
       +'<div class="journal-odometer"><div class="odo-label">Start</div><input class="odo-input" data-odo="'+e(day.id)+'" data-odofield="start" placeholder="00000" value="'+e(dayOdo.start||'')+'" type="number" inputmode="numeric"><div class="odo-label" style="margin-left:6px">End</div><input class="odo-input" data-odo="'+e(day.id)+'" data-odofield="end" placeholder="00000" value="'+e(dayOdo.end||'')+'" type="number" inputmode="numeric"><div class="odo-unit">mi</div>'+(diff>0?'<div class="odo-diff">'+diff+' mi today</div>':'')+'</div>'
-      +'<textarea class="journal-note-input" data-note="'+e(day.id)+'" placeholder="Notes from today\'s ride...">'+e(dayJrn.note||'')+'</textarea>'
+      +'<div style="margin-bottom:4px;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke)">What was great about today?</div>'
+      +'<textarea class="journal-note-input" data-note="'+e(day.id)+'" placeholder="The ridge road at sunset, the diner in the middle of nowhere, the people you met...">'+e(dayJrn.note||'')+'</textarea>'
       +'<div class="j-weather" id="jw-'+e(day.id)+'"><div class="j-weather-icon">☁</div><div class="j-weather-info"><div class="j-weather-loc">Tap to load weather</div><div class="j-weather-desc">for '+e(day.title)+'</div></div><button class="j-weather-btn" data-loadweather="'+e(day.id)+'" data-city="'+e(day.title)+'">Load</button></div>'
       +'<div style="margin-bottom:6px;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke)">Photos ('+dayPhotos.length+')</div>'
-      +'<div class="j-photo-grid" id="pg-'+e(day.id)+'">';
-    dayPhotos.forEach(function(ph,pi){var hasCap=ph.caption&&ph.caption.trim();html+='<div class="j-photo-cell"><img class="j-photo-thumb" src="'+ph.data+'" data-viewphoto="'+e(day.id)+'" data-photoidx="'+pi+'" alt="">'+(hasCap?'<span class="j-photo-cap-badge">✎</span>':'')+'</div>';});
-    html+='<div class="j-photo-add" data-addphoto="'+e(day.id)+'"><span>+</span></div></div>'
+      +'<div class="j-photo-list" id="pg-'+e(day.id)+'">';
+    dayPhotos.forEach(function(ph,pi){
+      html+='<div class="j-photo-item">'
+        +'<img class="j-photo-item-img" src="'+ph.data+'" data-viewphoto="'+e(day.id)+'" data-photoidx="'+pi+'" alt="">'
+        +'<textarea class="j-photo-cap-input" data-cap="'+e(day.id)+'" data-capidx="'+pi+'" placeholder="What\'s this one? (a caption for the book)">'+e(ph.caption||'')+'</textarea>'
+        +'</div>';
+    });
+    html+='</div><button class="j-photo-add-wide" data-addphoto="'+e(day.id)+'"><span>＋</span> Add Photos</button>'
       +'<div class="j-share-row"><button class="share-btn fb" data-sharefb="'+e(day.id)+'" style="width:100%;justify-content:center">📤 Share This Day</button></div></div></div>';
   });
   el.innerHTML=html;
@@ -1110,6 +1166,15 @@ function renderJournal(data){
     // When the keyboard opens, lift the note box up so it isn't hidden behind it
     ta.addEventListener('focus',function(){setTimeout(function(){ta.scrollIntoView({behavior:'smooth',block:'center'});},300);});
   });
+  // Per-photo caption boxes — save to that photo's caption on blur
+  el.querySelectorAll('[data-cap]').forEach(function(ta){
+    ta.addEventListener('blur',function(){
+      var dayId=ta.getAttribute('data-cap'),idx=parseInt(ta.getAttribute('data-capidx'));
+      var phData=getPhotos(ST.tripId);
+      if(phData[dayId]&&phData[dayId][idx]){phData[dayId][idx].caption=ta.value;savePhotos(ST.tripId,phData);}
+    });
+    ta.addEventListener('focus',function(){setTimeout(function(){ta.scrollIntoView({behavior:'smooth',block:'center'});},300);});
+  });
   el.querySelectorAll('[data-addphoto]').forEach(function(btn){tap(btn,function(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();ST.photoCallback=btn.getAttribute('data-addphoto');document.getElementById('photo-file-input').click();});});
   el.querySelectorAll('[data-viewphoto]').forEach(function(img){tap(img,function(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();openPhotoViewer(img.getAttribute('data-viewphoto'),parseInt(img.getAttribute('data-photoidx')));});});
   el.querySelectorAll('[data-loadweather]').forEach(function(btn){tap(btn,function(){loadWeatherForDay(btn.getAttribute('data-loadweather'),btn.getAttribute('data-city'));});});
@@ -1122,13 +1187,19 @@ function renderJournal(data){
 document.getElementById('photo-file-input').addEventListener('change',function(ev){
   var files=ev.target.files;if(!files||!files.length||!ST.photoCallback)return;
   var dayId=ST.photoCallback;
-  Array.from(files).forEach(function(file){
-    fileToDataUrl(file).then(function(full){return shrinkDataUrl(full);}).then(function(small){
-      var photos=getPhotos(ST.tripId);if(!photos[dayId])photos[dayId]=[];
-      photos[dayId].push({data:small,name:file.name,ts:Date.now(),caption:''});
-      try{savePhotos(ST.tripId,photos);}catch(err){alert('Storage full — too many photos on this device. Try removing some first.');return;}
-      var grid=document.getElementById('pg-'+dayId);
-      if(grid){var idx=photos[dayId].length-1;var cell=document.createElement('div');cell.className='j-photo-cell';var img=document.createElement('img');img.className='j-photo-thumb';img.src=small;img.setAttribute('data-viewphoto',dayId);img.setAttribute('data-photoidx',String(idx));tap(img,function(){openPhotoViewer(dayId,idx);});cell.appendChild(img);grid.insertBefore(cell,grid.querySelector('.j-photo-add'));var countEl=grid.previousElementSibling;if(countEl)countEl.textContent='Photos ('+photos[dayId].length+')';}
+  var jobs=Array.from(files).map(function(file){
+    return fileToDataUrl(file).then(function(full){return shrinkDataUrl(full);}).then(function(small){
+      return {data:small,name:file.name,ts:Date.now(),caption:''};
+    });
+  });
+  Promise.all(jobs).then(function(newPhotos){
+    var photos=getPhotos(ST.tripId);if(!photos[dayId])photos[dayId]=[];
+    newPhotos.forEach(function(p){photos[dayId].push(p);});
+    // re-render immediately from cache so photos+caption boxes appear,
+    // then persist to IndexedDB in the background.
+    renderJournal(getTD(ST.tripId));
+    savePhotos(ST.tripId,photos).catch(function(){
+      alert('Couldn\'t save photos to this device\'s storage. Try removing some first.');
     });
   });
   ev.target.value='';ST.photoCallback=null;
@@ -1266,7 +1337,6 @@ function renderBook(data){
     var day=entry.day,dayJrn=jrn[day.id]||{},dayOdo=odo[day.id]||{},dayPhotos=photos[day.id]||[],dayMiles=dayOdo.start&&dayOdo.end&&dayOdo.end>dayOdo.start?dayOdo.end-dayOdo.start:0;
     html+='<div style="background:#1a1a1a;border:1px solid #242424;border-radius:10px;margin-bottom:10px;overflow:hidden"><div style="padding:12px 14px 10px;border-bottom:1px solid #242424;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#555">'+e(day.date)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:600;color:#f5f5f0;flex:1">'+e(day.title)+'</div>'+(dayMiles>0?'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:#f59e0b">'+dayMiles+' mi</div>':day.miles?'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:#555">'+e(day.miles)+'</div>':'')+'</div><div style="padding:10px 14px 12px">';
     if(day.stops&&day.stops.length){html+='<div style="margin-bottom:10px">';day.stops.forEach(function(s){html+='<div style="display:flex;gap:6px;align-items:baseline;margin-bottom:3px"><div style="width:5px;height:5px;border-radius:50%;background:'+e(s.c||'#888')+';flex-shrink:0;margin-top:5px"></div><div style="font-size:12px;color:#888;line-height:1.4">'+e(s.n)+'</div></div>';});html+='</div>';}
-    if(dayJrn.note)html+='<div style="background:#0f0f0f;border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:10px;font-size:13px;color:#bbb;line-height:1.6;font-style:italic;white-space:pre-wrap">'+e(dayJrn.note)+'</div>';
     if(dayPhotos.length>0){
       var anyCap=dayPhotos.some(function(ph){return ph.caption&&ph.caption.trim();});
       if(anyCap){
@@ -1281,6 +1351,7 @@ function renderBook(data){
       }
     }
     else html+='<div style="text-align:center;padding:16px;color:#333;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase">No photos this day</div>';
+    if(dayJrn.note&&dayJrn.note.trim())html+='<div style="margin-top:12px;padding:12px 14px;background:#0f0f0f;border:1px solid #242424;border-radius:8px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#92600a;margin-bottom:6px">What was great about this day</div><div style="font-size:13px;color:#bbb;line-height:1.65;font-style:italic;white-space:pre-wrap">'+e(dayJrn.note)+'</div></div>';
     html+='</div></div>';
   });
   var certMiles=totalOdoMiles>0?totalOdoMiles.toLocaleString():(data.totalMiles||'');
@@ -1302,7 +1373,6 @@ function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhot
     var day=entry.day,dayJrn=jrn[day.id]||{},dayOdo=odo[day.id]||{},dayPhotos=photos[day.id]||[],dayMiles=dayOdo.start&&dayOdo.end&&dayOdo.end>dayOdo.start?dayOdo.end-dayOdo.start:0;
     html+='<div class="page"><div style="border-bottom:2px solid #f59e0b;padding-bottom:12px;margin-bottom:20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999">'+e(day.date)+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;letter-spacing:.03em;color:#111;flex:1">'+e(day.title)+'</div>'+(dayMiles>0?'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:#f59e0b">'+dayMiles+' mi</div>':'')+'</div>';
     if(day.stops&&day.stops.length){html+='<div style="margin-bottom:16px">';day.stops.forEach(function(s){html+='<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px"><div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:5px"></div><div style="font-size:13px;color:#444;line-height:1.5">'+e(s.n)+(s.t?'<span style="color:#999"> — '+e(s.t)+'</span>':'')+'</div></div>';});html+='</div>';}
-    if(dayJrn.note)html+='<div style="border-left:3px solid #f59e0b;padding:10px 14px;margin-bottom:16px;background:#fffdf5;font-size:14px;color:#333;line-height:1.7;font-style:italic;white-space:pre-wrap">'+e(dayJrn.note)+'</div>';
     if(day.hotel)html+='<div style="font-size:12px;color:#999;margin-bottom:16px">🏨 '+e(day.hotel)+'</div>';
     if(dayPhotos.length>0){
       var anyCapP=dayPhotos.some(function(ph){return ph.caption&&ph.caption.trim();});
@@ -1316,6 +1386,7 @@ function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhot
         var cols=dayPhotos.length===1?1:dayPhotos.length<=4?2:3;html+='<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:4px;border-radius:4px;overflow:hidden">';dayPhotos.forEach(function(ph){html+='<img src="'+ph.data+'" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" alt="">';});html+='</div>';
       }
     }
+    if(dayJrn.note&&dayJrn.note.trim())html+='<div style="margin-top:20px;padding:16px 18px;background:#fffdf5;border:1px solid #f0e6c8;border-radius:6px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#b8860b;margin-bottom:8px">What was great about this day</div><div style="font-size:14px;color:#333;line-height:1.7;font-style:italic;white-space:pre-wrap">'+e(dayJrn.note)+'</div></div>';
     html+='</div>';
   });
   html+='<div class="page" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;border:3px solid #f59e0b;border-radius:4px;position:relative;padding:60px 40px"><div style="position:absolute;top:16px;left:16px;width:24px;height:24px;border-top:2px solid #f59e0b;border-left:2px solid #f59e0b"></div><div style="position:absolute;top:16px;right:16px;width:24px;height:24px;border-top:2px solid #f59e0b;border-right:2px solid #f59e0b"></div><div style="position:absolute;bottom:16px;left:16px;width:24px;height:24px;border-bottom:2px solid #f59e0b;border-left:2px solid #f59e0b"></div><div style="position:absolute;bottom:16px;right:16px;width:24px;height:24px;border-bottom:2px solid #f59e0b;border-right:2px solid #f59e0b"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:#aaa;margin-bottom:24px">Certificate of Achievement</div><div style="font-size:48px;margin-bottom:16px">🏍</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:#666;margin-bottom:8px">This certifies that</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:48px;letter-spacing:.06em;color:#111;margin-bottom:8px">Brad Pearl</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;color:#666;margin-bottom:20px">successfully completed the motorcycle journey</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:32px;letter-spacing:.04em;color:#f59e0b;margin-bottom:4px">'+e(data.from)+' → '+e(data.to)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;color:#999;margin-bottom:24px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="width:100px;height:1px;background:#ddd;margin:0 auto 24px"></div><div style="display:flex;gap:48px;margin-bottom:32px"><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b">'+certMiles+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Miles Ridden</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b">'+allDays.length+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Days on Road</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b">'+totalPhotos+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#aaa">Moments Captured</div></div></div><div style="width:200px;height:1px;background:#ddd;margin:0 auto 12px"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#bbb">Rumbling Nomad</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;color:#ddd;margin-top:4px">rumblingnomad.com</div></div></body></html>';
@@ -1691,29 +1762,27 @@ function createTripFromImport(withGps){
       }
     });
     if(shrinkOverlay)shrinkOverlay.remove();
-    try{
-      savePhotos(id,photoStore);
-    }catch(err){
-      // quota still exceeded even after shrinking — tell the truth, don't pretend it saved
+    // Persist to IndexedDB (large capacity). Only show success once truly saved,
+    // and only warn on a genuine failure.
+    savePhotos(id,photoStore).then(function(){
+      var check=getPhotos(id),saved=0;
+      Object.keys(check).forEach(function(k){saved+=(check[k]||[]).length;});
+      var ov=document.createElement('div');ov.className='modal-overlay open';
+      ov.innerHTML='<div class="modal"><div class="modal-title">Trip Created \u2713</div>'
+        +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px"><b style="color:var(--white)">'+e(name)+'</b> created with '+saved+' photo'+(saved===1?'':'s')+' across '+dayKeys.length+' day'+(dayKeys.length===1?'':'s')+'.</p>'
+        +'<div class="modal-actions"><button class="small-btn amber" id="imp-newtrip-go">Open Trip</button></div></div>';
+      document.body.appendChild(ov);
+      tap(document.getElementById('imp-newtrip-go'),function(){ov.remove();openTrip(id);});
+      tapOutside(ov,function(){ov.remove();});
+    }).catch(function(err){
       var warn=document.createElement('div');warn.className='modal-overlay open';
-      warn.innerHTML='<div class="modal"><div class="modal-title">Photos Too Large</div>'
-        +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">The trip was created, but this device ran out of storage space before all '+photos.length+' photos could be saved. Try creating the trip with fewer photos at a time, or remove some older trips first.</p>'
+      warn.innerHTML='<div class="modal"><div class="modal-title">Couldn\'t Save Photos</div>'
+        +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">The trip was created, but this device couldn\'t store the photos. This is unusual \u2014 try closing other tabs or restarting the browser, then re-import.</p>'
         +'<div class="modal-actions"><button class="small-btn amber" id="warn-go">Open Trip Anyway</button></div></div>';
       document.body.appendChild(warn);
       tap(document.getElementById('warn-go'),function(){warn.remove();openTrip(id);});
       tapOutside(warn,function(){warn.remove();});
-      return;
-    }
-    // verify the photos actually persisted (not silently dropped)
-    var check=getPhotos(id),saved=0;
-    Object.keys(check).forEach(function(k){saved+=(check[k]||[]).length;});
-    var ov=document.createElement('div');ov.className='modal-overlay open';
-    ov.innerHTML='<div class="modal"><div class="modal-title">Trip Created \u2713</div>'
-      +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px"><b style="color:var(--white)">'+e(name)+'</b> created with '+saved+' photo'+(saved===1?'':'s')+' across '+dayKeys.length+' day'+(dayKeys.length===1?'':'s')+'.</p>'
-      +'<div class="modal-actions"><button class="small-btn amber" id="imp-newtrip-go">Open Trip</button></div></div>';
-    document.body.appendChild(ov);
-    tap(document.getElementById('imp-newtrip-go'),function(){ov.remove();openTrip(id);});
-    tapOutside(ov,function(){ov.remove();});
+    });
   });
 }
 
@@ -1756,6 +1825,9 @@ function pickDayInTrip(tripId,withGps){
 
 function saveImportToDay(dayId,withGps,modalEl,tripId){
   tripId=tripId||ST.tripId;
+  // Make sure THIS trip's photos are loaded into the cache before we read/merge,
+  // so we never overwrite an existing trip's photos with an empty object.
+  loadPhotoCache(tripId).then(function(){
   // de-dup, sort, then SHRINK before saving so we don't blow the storage quota
   var photos=getPhotos(tripId);
   if(!photos[dayId])photos[dayId]=[];
@@ -1775,27 +1847,26 @@ function saveImportToDay(dayId,withGps,modalEl,tripId){
       added++;
     });
     shrinkOverlay.remove();
-    try{
-      savePhotos(tripId,photos);
-    }catch(err){
+    savePhotos(tripId,photos).then(function(){
+      var check=getPhotos(tripId),savedDay=(check[dayId]||[]).length;
+      var data=getTD(tripId),day=getDayById(data,dayId);
+      var ov=document.createElement('div');ov.className='modal-overlay open';
+      ov.innerHTML='<div class="modal"><div class="modal-title">Saved \u2713</div>'
+        +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:6px">'+added+' photo'+(added===1?'':'s')+' saved to <b style="color:var(--white)">'+e(day.title||day.date||'that day')+'</b> in your Journal.</p>'
+        +'<div class="modal-actions"><button class="small-btn" id="imp-saved-stay">Keep Importing</button><button class="small-btn amber" id="imp-saved-go">Open Trip</button></div></div>';
+      document.body.appendChild(ov);
+      tap(document.getElementById('imp-saved-stay'),function(){ov.remove();});
+      tap(document.getElementById('imp-saved-go'),function(){ov.remove();openTrip(tripId);});
+      tapOutside(ov,function(){ov.remove();});
+    }).catch(function(){
       var warn=document.createElement('div');warn.className='modal-overlay open';
-      warn.innerHTML='<div class="modal"><div class="modal-title">Storage Full</div><p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">This device ran out of space before all the photos could be saved. Try fewer at a time, or remove an older trip.</p><div class="modal-actions"><button class="small-btn amber" id="warn-close">OK</button></div></div>';
+      warn.innerHTML='<div class="modal"><div class="modal-title">Couldn\'t Save</div><p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">This device couldn\'t store the photos just now. Try again, or restart the browser.</p><div class="modal-actions"><button class="small-btn amber" id="warn-close">OK</button></div></div>';
       document.body.appendChild(warn);
       tap(document.getElementById('warn-close'),function(){warn.remove();openTrip(tripId);});
-      return;
-    }
-    // verify persisted count
-    var check=getPhotos(tripId),savedDay=(check[dayId]||[]).length;
-    var data=getTD(tripId),day=getDayById(data,dayId);
-    var ov=document.createElement('div');ov.className='modal-overlay open';
-    ov.innerHTML='<div class="modal"><div class="modal-title">Saved \u2713</div>'
-      +'<p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:6px">'+added+' photo'+(added===1?'':'s')+' saved to <b style="color:var(--white)">'+e(day.title||day.date||'that day')+'</b> in your Journal.</p>'
-      +'<div class="modal-actions"><button class="small-btn" id="imp-saved-stay">Keep Importing</button><button class="small-btn amber" id="imp-saved-go">Open Trip</button></div></div>';
-    document.body.appendChild(ov);
-    tap(document.getElementById('imp-saved-stay'),function(){ov.remove();});
-    tap(document.getElementById('imp-saved-go'),function(){ov.remove();openTrip(tripId);});
-    tapOutside(ov,function(){ov.remove();});
+      tapOutside(warn,function(){warn.remove();});
+    });
   });
+  }); // close loadPhotoCache wrapper
 }
 function saveImportToDay_OLD(dayId,withGps,modalEl,tripId){
   tripId=tripId||ST.tripId;
