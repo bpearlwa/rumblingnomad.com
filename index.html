@@ -434,6 +434,7 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 
 <!-- EXIF parsing for photo import -->
 <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <!-- Google Maps JavaScript API -->
 <script>
@@ -1382,7 +1383,7 @@ function renderBook(data){
   var allDays=[];data.sections.forEach(function(sec){sec.days.forEach(function(day){allDays.push({day:day,sec:sec});});});
   var totalOdoMiles=0;allDays.forEach(function(entry){var o=odo[entry.day.id]||{};if(o.start&&o.end&&o.end>o.start)totalOdoMiles+=o.end-o.start;});
   var totalPhotos=0;allDays.forEach(function(entry){totalPhotos+=(photos[entry.day.id]||[]).length;});
-  var html='<div style="padding-bottom:20px"><div style="display:flex;gap:8px;margin-bottom:16px"><button id="book-print-btn" style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:10px;border-radius:8px;cursor:pointer;border:1px solid #2e2e2e;background:transparent;color:#bbb">🖨 Print / Save PDF</button><button id="book-share-btn" style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:10px;border-radius:8px;cursor:pointer;border:none;background:#f59e0b;color:#0f0f0f">📤 Share Book</button></div>'
+  var html='<div style="padding-bottom:20px"><div style="display:flex;gap:8px;margin-bottom:8px"><button id="book-pdf-btn" style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:11px;border-radius:8px;cursor:pointer;border:none;background:#f59e0b;color:#0f0f0f">📕 Download Book PDF</button><button id="book-share-btn" style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:11px;border-radius:8px;cursor:pointer;border:1px solid #2e2e2e;background:transparent;color:#bbb">📤 Share Book</button></div><div style="text-align:center;margin-bottom:16px"><button id="book-print-btn" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:4px;border:none;background:transparent;color:#555;cursor:pointer;text-decoration:underline">old print version</button></div>'
     +'<div id="trip-book-content"><div style="background:#0f0f0f;border:1px solid #2e2e2e;border-top:4px solid #f59e0b;border-radius:12px;padding:28px 20px 24px;margin-bottom:12px;text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#92600a;margin-bottom:12px">Rumbling Nomad · Trip Journal</div>'
     +(getCoverImage(data)?'<img class="book-cover-img" src="'+getCoverImage(data)+'" alt="cover">':'')
     +'<button class="book-cover-btn" id="book-cover-btn">'+(data.coverPhoto?'📷 Change Cover Photo':'📷 Select Cover Photo')+'</button>'
@@ -1417,9 +1418,250 @@ function renderBook(data){
     +'<div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px"><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:#f59e0b">'+certMiles+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#555">Miles Ridden</div></div><div style="width:1px;background:#2e2e2e"></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:#f59e0b">'+e(allDays.length)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#555">Days</div></div><div style="width:1px;background:#2e2e2e"></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:#f59e0b">'+totalPhotos+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#555">Photos</div></div></div>'
     +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;color:#555;margin-bottom:4px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-top:16px">Rumbling Nomad</div></div></div></div>';
   el.innerHTML=html;
+  tap(document.getElementById('book-pdf-btn'),function(){generateBookPDF(data);});
   tap(document.getElementById('book-print-btn'),function(){generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhotos);});
   tap(document.getElementById('book-cover-btn'),function(){openCoverPicker(data);});
   tap(document.getElementById('book-share-btn'),function(){if(navigator.share){navigator.share({title:'My Trip: '+data.from+' → '+data.to,text:'Check out my Rumbling Nomad trip journal',url:shareUrl(ST.tripId)}).catch(function(){});}else{if(navigator.clipboard)navigator.clipboard.writeText(shareUrl(ST.tripId)).then(function(){alert('Link copied!');});}});
+}
+
+// ─────────────────────────────────────────────────────────────
+// Code-built PDF book using jsPDF. Deterministic layout: the code
+// places every photo, caption, header, and the certificate at exact
+// coordinates, packing as many photos per page as cleanly fit.
+// ─────────────────────────────────────────────────────────────
+function imgDims(dataUrl){
+  return new Promise(function(res){
+    var im=new Image();
+    im.onload=function(){res({w:im.naturalWidth||im.width,h:im.naturalHeight||im.height});};
+    im.onerror=function(){res({w:1,h:1});};
+    im.src=dataUrl;
+  });
+}
+
+function generateBookPDF(data){
+  if(!window.jspdf||!window.jspdf.jsPDF){alert('PDF library still loading — try again in a moment.');return;}
+  var jsPDF=window.jspdf.jsPDF;
+  var jrn=getJournal(ST.tripId),odo=getOdo(ST.tripId),photos=getPhotos(ST.tripId);
+  var allDays=[];data.sections.forEach(function(sec){sec.days.forEach(function(day){allDays.push({day:day,sec:sec});});});
+  var totalOdoMiles=0;allDays.forEach(function(en){var o=odo[en.day.id]||{};if(o.start&&o.end&&o.end>o.start)totalOdoMiles+=o.end-o.start;});
+  var totalPhotos=0;allDays.forEach(function(en){totalPhotos+=(photos[en.day.id]||[]).length;});
+  var certMiles=totalOdoMiles>0?totalOdoMiles.toLocaleString():(data.totalMiles||'');
+
+  // Gather every image we'll need to measure (cover + all day photos).
+  var toMeasure=[];
+  var coverImg=getCoverImage(data);
+  if(coverImg)toMeasure.push(coverImg);
+  allDays.forEach(function(en){(photos[en.day.id]||[]).forEach(function(ph){if(ph.data)toMeasure.push(ph.data);});});
+
+  // Show a quick "building" overlay.
+  var ov=document.createElement('div');ov.className='modal-overlay open';
+  ov.innerHTML='<div class="modal"><div class="modal-title">Building Your Book</div><div class="imp-status"><div class="spinner"></div><div class="imp-status-text">Composing '+totalPhotos+' photo'+(totalPhotos===1?'':'s')+' into pages\u2026</div></div></div>';
+  document.body.appendChild(ov);
+
+  Promise.all(toMeasure.map(function(d){return imgDims(d);})).then(function(dimsArr){
+    // Map each dataUrl to its aspect ratio.
+    var dims={};toMeasure.forEach(function(d,i){dims[d]={w:dimsArr[i].w,h:dimsArr[i].h,ar:dimsArr[i].w/dimsArr[i].h};});
+
+    // Page geometry (US Letter, points: 612 x 792). Margins.
+    var doc=new jsPDF({unit:'pt',format:'letter'});
+    var PW=612, PH=792, M=42;             // page width/height, margin
+    var CW=PW-M*2;                         // content width
+    var GUT=10;                            // gutter between paired photos
+    var AMBER=[245,158,11], GOLD=[184,134,11], INK=[17,17,17], GREY=[120,120,120], LGREY=[170,170,170];
+    var y=M;                              // vertical cursor
+
+    function addPage(){doc.addPage();y=M;}
+    function room(h){return (y+h)<=(PH-M);}
+
+    // ---- helper: draw an image fit to a box (contain), return drawn height ----
+    function drawImg(d,x,boxW){
+      var ar=dims[d]?dims[d].ar:1.4;
+      var drawH=boxW/ar;
+      try{doc.addImage(d,'JPEG',x,y,boxW,drawH);}catch(e){try{doc.addImage(d,'PNG',x,y,boxW,drawH);}catch(e2){}}
+      return drawH;
+    }
+
+    // ---- helper: caption text under a box of given width, returns height used ----
+    function captionBlock(text,x,boxW){
+      if(!text||!text.trim())return 0;
+      doc.setFont('helvetica','italic');doc.setFontSize(9.5);doc.setTextColor(90,90,90);
+      var lines=doc.splitTextToSize(text.trim(),boxW);
+      var lh=12;
+      lines.forEach(function(ln,i){doc.text(ln,x,y+10+i*lh);});
+      return 8+lines.length*lh;
+    }
+
+    // ─── COVER / TITLE PAGE ───
+    (function cover(){
+      // small kicker
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(150,150,150);
+      doc.text('RUMBLING NOMAD  \u00b7  TRIP JOURNAL',PW/2,y+14,{align:'center'});
+      y+=34;
+      if(coverImg){
+        var ar=dims[coverImg]?dims[coverImg].ar:1.4;
+        var boxW=CW, boxH=boxW/ar;
+        var maxH=300; if(boxH>maxH){boxH=maxH;boxW=boxH*ar;}
+        var cx=M+(CW-boxW)/2;
+        try{doc.addImage(coverImg,'JPEG',cx,y,boxW,boxH);}catch(e){try{doc.addImage(coverImg,'PNG',cx,y,boxW,boxH);}catch(e2){}}
+        y+=boxH+24;
+      }
+      // big route
+      doc.setFont('helvetica','bold');doc.setFontSize(40);doc.setTextColor(INK[0],INK[1],INK[2]);
+      doc.text(String(data.from||'Start'),PW/2,y+30,{align:'center'});y+=46;
+      doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]);doc.setFontSize(24);doc.text('\u2193',PW/2,y+6,{align:'center'});y+=26;
+      doc.setTextColor(INK[0],INK[1],INK[2]);doc.setFontSize(40);doc.text(String(data.to||'End'),PW/2,y+30,{align:'center'});y+=50;
+      // dates / tagline
+      doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(110,110,110);
+      doc.text((data.startDate||'')+'  \u2013  '+(data.endDate||''),PW/2,y+12,{align:'center'});y+=22;
+      if(data.tagline){doc.setFontSize(10);doc.setTextColor(150,150,150);doc.text(String(data.tagline),PW/2,y+10,{align:'center'});y+=20;}
+      // stat row
+      y+=14;
+      var stats=[[certMiles||'\u2014','MILES'],[String(allDays.length),'DAYS'],[String(totalPhotos),'PHOTOS']];
+      var colW=CW/3;
+      stats.forEach(function(s,i){
+        var cx=M+colW*i+colW/2;
+        doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]);
+        doc.text(s[0],cx,y+18,{align:'center'});
+        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(140,140,140);
+        doc.text(s[1],cx,y+32,{align:'center'});
+      });
+    })();
+
+    // ─── DAY PAGES ───
+    allDays.forEach(function(en){
+      var day=en.day,dayJrn=jrn[day.id]||{},dayOdo=odo[day.id]||{},dayPhotos=photos[day.id]||[];
+      var dayMiles=dayOdo.start&&dayOdo.end&&dayOdo.end>dayOdo.start?(dayOdo.end-dayOdo.start):0;
+
+      addPage();
+      // day header
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(150,150,150);
+      doc.text(String(day.date||'').toUpperCase(),M,y+10);
+      doc.setFontSize(20);doc.setTextColor(INK[0],INK[1],INK[2]);
+      doc.text(String(day.title||''),M,y+30);
+      if(dayMiles>0){doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]);doc.setFontSize(15);doc.text(dayMiles+' mi',PW-M,y+30,{align:'right'});}
+      y+=40;
+      // amber rule
+      doc.setDrawColor(AMBER[0],AMBER[1],AMBER[2]);doc.setLineWidth(1.5);doc.line(M,y,PW-M,y);y+=16;
+
+      // classify photos
+      var items=dayPhotos.map(function(ph){var dd=dims[ph.data]||{ar:1.4};return {ph:ph,ar:dd.ar,land:dd.ar>1.3,cap:(ph.caption||'').trim()};});
+
+      var i=0;
+      while(i<items.length){
+        var a=items[i];
+        // Try to pair two consecutive landscape photos side by side (neither has a long caption forcing full width)
+        if(a.land && i+1<items.length && items[i+1].land){
+          var b=items[i+1];
+          var halfW=(CW-GUT)/2;
+          var hA=halfW/a.ar, hB=halfW/b.ar;
+          var rowImgH=Math.max(hA,hB);
+          // measure caption heights at half width
+          // need room for the taller image + caption area
+          var capAh=a.cap?(8+ Math.ceil(doc.splitTextToSize(a.cap,halfW).length)*12):0;
+          var capBh=b.cap?(8+ Math.ceil(doc.splitTextToSize(b.cap,halfW).length)*12):0;
+          var blockH=rowImgH+Math.max(capAh,capBh)+14;
+          if(!room(blockH)){addPage();}
+          // draw both at top-aligned
+          var yStart=y;
+          drawImg(a.ph.data,M,halfW);
+          drawImg(b.ph.data,M+halfW+GUT,halfW);
+          y=yStart+rowImgH;
+          // captions under each
+          var savedY=y;
+          captionBlock(a.cap,M,halfW);
+          y=savedY; captionBlock(b.cap,M+halfW+GUT,halfW);
+          y=savedY+Math.max(capAh,capBh)+14;
+          i+=2;
+          continue;
+        }
+        // single photo full width
+        var ar=a.ar, drawH=CW/ar;
+        // cap big portrait so it doesn't eat whole page
+        var maxH=PH-M*2-60; if(drawH>maxH){drawH=maxH;}
+        var capH=a.cap?(8+Math.ceil(doc.splitTextToSize(a.cap,CW).length)*12):0;
+        var blockH=drawH+capH+14;
+        if(!room(blockH) && y>M+50){addPage();}
+        // recompute available; if still too tall for a fresh page, scale to fit
+        var avail=PH-M-y;
+        if(drawH+capH+14>avail){drawH=Math.max(120,avail-capH-14);}
+        var bw=drawH*ar; if(bw>CW){bw=CW;drawH=bw/ar;}
+        var cx=M+(CW-bw)/2;
+        try{doc.addImage(a.ph.data,'JPEG',cx,y,bw,drawH);}catch(e){try{doc.addImage(a.ph.data,'PNG',cx,y,bw,drawH);}catch(e2){}}
+        y+=drawH;
+        captionBlock(a.cap,M,CW);
+        y+=capH+14;
+        i+=1;
+      }
+
+      // reflection box (tucked into remaining space, or new page if no room)
+      if(dayJrn.note&&dayJrn.note.trim()){
+        doc.setFont('helvetica','normal');doc.setFontSize(11);
+        var rlines=doc.splitTextToSize(dayJrn.note.trim(),CW-28);
+        var boxH=18+ rlines.length*14 +18;
+        if(!room(boxH+10)){addPage();}
+        y+=6;
+        doc.setFillColor(255,253,245);doc.setDrawColor(240,230,200);doc.setLineWidth(1);
+        doc.roundedRect(M,y,CW,boxH,5,5,'FD');
+        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+        doc.text('WHAT WAS GREAT ABOUT THIS DAY',M+14,y+16);
+        doc.setFont('helvetica','italic');doc.setFontSize(11);doc.setTextColor(60,60,60);
+        rlines.forEach(function(ln,k){doc.text(ln,M+14,y+32+k*14);});
+        y+=boxH+10;
+      }
+    });
+
+    // ─── CERTIFICATE ───
+    addPage();
+    var cx0=M, cy0=M, cw=CW, ch=PH-M*2;
+    // outer double border
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(2.5);doc.rect(cx0,cy0,cw,ch);
+    doc.setLineWidth(0.8);doc.rect(cx0+8,cy0+8,cw-16,ch-16);
+    // content centered
+    var midX=PW/2; var cyc=cy0+60;
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.text('CERTIFICATE OF ACHIEVEMENT',midX,cyc,{align:'center'});cyc+=18;
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(1);doc.line(midX-45,cyc,midX+45,cyc);cyc+=40;
+    // medallion circle
+    doc.setFillColor(247,231,184);doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(2.5);
+    doc.circle(midX,cyc+14,26,'FD');
+    doc.setFontSize(26);doc.text('\uD83C\uDFCD',midX,cyc+22,{align:'center'});
+    cyc+=70;
+    doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(110,110,110);
+    doc.text('This certifies that',midX,cyc,{align:'center'});cyc+=34;
+    doc.setFont('helvetica','bold');doc.setFontSize(34);doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text(String(data.riderName||'Brad Pearl'),midX,cyc,{align:'center'});cyc+=20;
+    doc.setDrawColor(216,196,144);doc.setLineWidth(1);doc.line(midX-80,cyc,midX+80,cyc);cyc+=24;
+    doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(110,110,110);
+    doc.text('successfully completed the motorcycle journey',midX,cyc,{align:'center'});cyc+=34;
+    doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.text(String(data.from||'')+'  \u2192  '+String(data.to||''),midX,cyc,{align:'center'});cyc+=24;
+    doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(150,150,150);
+    doc.text((data.startDate||'')+'  \u2013  '+(data.endDate||''),midX,cyc,{align:'center'});cyc+=40;
+    // stat trio
+    var st=[[certMiles||'\u2014','MILES RIDDEN'],[String(allDays.length),'DAYS ON ROAD'],[String(totalPhotos),'MOMENTS CAPTURED']];
+    var cwid=cw/3;
+    st.forEach(function(s,i){
+      var sx=cx0+cwid*i+cwid/2;
+      doc.setFont('helvetica','bold');doc.setFontSize(28);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+      doc.text(s[0],sx,cyc,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(150,150,150);
+      doc.text(s[1],sx,cyc+14,{align:'center'});
+    });
+    cyc+=44;
+    doc.setDrawColor(216,196,144);doc.setLineWidth(1);doc.line(midX-90,cyc,midX+90,cyc);cyc+=18;
+    doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.text('RUMBLING NOMAD',midX,cyc,{align:'center'});cyc+=14;
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(180,180,180);
+    doc.text('rumblingnomad.com',midX,cyc,{align:'center'});
+
+    // ─── SAVE ───
+    if(ov)ov.remove();
+    var fname=((data.from||'trip')+'-'+(data.to||'')).replace(/[^a-z0-9]+/gi,'-')+'-Rumbling-Nomad.pdf';
+    doc.save(fname);
+  }).catch(function(err){
+    if(ov)ov.remove();
+    alert('Couldn\'t build the PDF: '+(err&&err.message?err.message:'unknown error'));
+  });
 }
 
 function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhotos){
