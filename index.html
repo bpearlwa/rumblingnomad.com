@@ -1508,7 +1508,7 @@ function generateBookPDF(data){
       // big route
       doc.setFont('helvetica','bold');doc.setFontSize(40);doc.setTextColor(INK[0],INK[1],INK[2]);
       doc.text(String(data.from||'Start'),PW/2,y+30,{align:'center'});y+=46;
-      doc.setTextColor(AMBER[0],AMBER[1],AMBER[2]);doc.setFontSize(24);doc.text('\u2193',PW/2,y+6,{align:'center'});y+=26;
+      doc.setDrawColor(AMBER[0],AMBER[1],AMBER[2]);doc.setLineWidth(2);doc.line(PW/2-16,y-2,PW/2+16,y-2);y+=22;
       doc.setTextColor(INK[0],INK[1],INK[2]);doc.setFontSize(40);doc.text(String(data.to||'End'),PW/2,y+30,{align:'center'});y+=50;
       // dates / tagline
       doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(110,110,110);
@@ -1546,52 +1546,67 @@ function generateBookPDF(data){
       // classify photos
       var items=dayPhotos.map(function(ph){var dd=dims[ph.data]||{ar:1.4};return {ph:ph,ar:dd.ar,land:dd.ar>1.3,cap:(ph.caption||'').trim()};});
 
-      var i=0;
-      while(i<items.length){
-        var a=items[i];
-        // Try to pair two consecutive landscape photos side by side (neither has a long caption forcing full width)
-        if(a.land && i+1<items.length && items[i+1].land){
-          var b=items[i+1];
-          var halfW=(CW-GUT)/2;
-          var hA=halfW/a.ar, hB=halfW/b.ar;
-          var rowImgH=Math.max(hA,hB);
-          // measure caption heights at half width
-          // need room for the taller image + caption area
-          var capAh=a.cap?(8+ Math.ceil(doc.splitTextToSize(a.cap,halfW).length)*12):0;
-          var capBh=b.cap?(8+ Math.ceil(doc.splitTextToSize(b.cap,halfW).length)*12):0;
-          var blockH=rowImgH+Math.max(capAh,capBh)+14;
-          if(!room(blockH)){addPage();}
-          // draw both at top-aligned
-          var yStart=y;
-          drawImg(a.ph.data,M,halfW);
-          drawImg(b.ph.data,M+halfW+GUT,halfW);
-          y=yStart+rowImgH;
-          // captions under each
-          var savedY=y;
-          captionBlock(a.cap,M,halfW);
-          y=savedY; captionBlock(b.cap,M+halfW+GUT,halfW);
-          y=savedY+Math.max(capAh,capBh)+14;
-          i+=2;
-          continue;
+      // ── Justified row packer ──
+      // Build rows of photos sized to a target height; scale each row to fill the
+      // content width (like a photo gallery). Captions sit under each row. Pages
+      // break only when a finished row won't fit — so headers never strand and
+      // pages pack tightly.
+      var TARGET_H=150;          // base row height in pts (smaller = more per page)
+      var rows=[];               // each row: {items:[{ph,ar,cap}], h}
+      var cur=[], curW=0;
+      items.forEach(function(it){
+        var wAtTarget=TARGET_H*it.ar;        // width this photo would take at target height
+        cur.push(it);
+        curW+=wAtTarget+GUT;
+        // close the row once it's at least as wide as the page (then justify it)
+        if(curW-GUT>=CW){rows.push(cur);cur=[];curW=0;}
+      });
+      if(cur.length)rows.push(cur);
+
+      rows.forEach(function(rowItems){
+        // compute scaled height so the row exactly fills CW (minus gutters)
+        var n=rowItems.length;
+        var sumAr=0;rowItems.forEach(function(it){sumAr+=it.ar;});
+        var avail=CW-GUT*(n-1);
+        var rowH=avail/sumAr;
+        // clamp: don't let a single wide photo get too short, or a lone portrait too tall
+        if(rowH>320)rowH=320;
+        if(n===1 && rowH>300)rowH=300;
+        // caption height for this row (max across items, at each item's width)
+        var capH=0;
+        rowItems.forEach(function(it){
+          if(it.cap){var w=rowH*it.ar;var lns=doc.splitTextToSize(it.cap,w).length;capH=Math.max(capH,8+lns*12);}
+        });
+        var blockH=rowH+capH+12;
+        // page break if this row won't fit AND we're not right under the header
+        if(y+blockH>(PH-M) && y>M+58){addPage();
+          // redraw nothing; header only appears on day's first page by design
         }
-        // single photo full width
-        var ar=a.ar, drawH=CW/ar;
-        // cap big portrait so it doesn't eat whole page
-        var maxH=PH-M*2-60; if(drawH>maxH){drawH=maxH;}
-        var capH=a.cap?(8+Math.ceil(doc.splitTextToSize(a.cap,CW).length)*12):0;
-        var blockH=drawH+capH+14;
-        if(!room(blockH) && y>M+50){addPage();}
-        // recompute available; if still too tall for a fresh page, scale to fit
-        var avail=PH-M-y;
-        if(drawH+capH+14>avail){drawH=Math.max(120,avail-capH-14);}
-        var bw=drawH*ar; if(bw>CW){bw=CW;drawH=bw/ar;}
-        var cx=M+(CW-bw)/2;
-        try{doc.addImage(a.ph.data,'JPEG',cx,y,bw,drawH);}catch(e){try{doc.addImage(a.ph.data,'PNG',cx,y,bw,drawH);}catch(e2){}}
-        y+=drawH;
-        captionBlock(a.cap,M,CW);
-        y+=capH+14;
-        i+=1;
-      }
+        // if even on a fresh page the row is too tall (huge portrait), scale down
+        if(y+blockH>(PH-M)){var over=(y+blockH)-(PH-M);rowH=Math.max(110,rowH-over);}
+        // draw the row left to right
+        var x=M, rowTop=y;
+        rowItems.forEach(function(it){
+          var w=rowH*it.ar;
+          try{doc.addImage(it.ph.data,'JPEG',x,rowTop,w,rowH);}catch(e){try{doc.addImage(it.ph.data,'PNG',x,rowTop,w,rowH);}catch(e2){}}
+          x+=w+GUT;
+        });
+        // captions under each, aligned to each photo's left edge
+        if(capH>0){
+          var cxp=M;
+          rowItems.forEach(function(it){
+            var w=rowH*it.ar;
+            if(it.cap){
+              doc.setFont('helvetica','italic');doc.setFontSize(9.5);doc.setTextColor(90,90,90);
+              var lns=doc.splitTextToSize(it.cap,w);
+              lns.forEach(function(ln,k){doc.text(ln,cxp,rowTop+rowH+12+k*12);});
+            }
+            cxp+=w+GUT;
+          });
+        }
+        y=rowTop+rowH+(capH>0?capH:0)+14;
+      });
+
 
       // reflection box (tucked into remaining space, or new page if no room)
       if(dayJrn.note&&dayJrn.note.trim()){
@@ -1624,7 +1639,7 @@ function generateBookPDF(data){
     // medallion circle
     doc.setFillColor(247,231,184);doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(2.5);
     doc.circle(midX,cyc+14,26,'FD');
-    doc.setFontSize(26);doc.text('\uD83C\uDFCD',midX,cyc+22,{align:'center'});
+    doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);doc.text('RN',midX,cyc+21,{align:'center'});
     cyc+=70;
     doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(110,110,110);
     doc.text('This certifies that',midX,cyc,{align:'center'});cyc+=34;
@@ -1634,7 +1649,7 @@ function generateBookPDF(data){
     doc.setFont('helvetica','normal');doc.setFontSize(13);doc.setTextColor(110,110,110);
     doc.text('successfully completed the motorcycle journey',midX,cyc,{align:'center'});cyc+=34;
     doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
-    doc.text(String(data.from||'')+'  \u2192  '+String(data.to||''),midX,cyc,{align:'center'});cyc+=24;
+    doc.text(String(data.from||'')+'   to   '+String(data.to||''),midX,cyc,{align:'center'});cyc+=24;
     doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(150,150,150);
     doc.text((data.startDate||'')+'  \u2013  '+(data.endDate||''),midX,cyc,{align:'center'});cyc+=40;
     // stat trio
