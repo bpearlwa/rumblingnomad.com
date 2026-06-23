@@ -218,6 +218,14 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .j-photo-cap-input::placeholder{color:var(--smoke);font-style:italic}
 .j-photo-add-wide{width:100%;padding:12px;background:transparent;border:1px dashed var(--asphalt-4);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
 .j-photo-add-wide:active{border-color:var(--amber);color:var(--amber)}
+.book-cover-img{width:100%;border-radius:8px;display:block;margin-bottom:16px;max-height:240px;object-fit:cover}
+.book-cover-btn{width:100%;padding:10px;margin-bottom:14px;background:transparent;border:1px dashed var(--asphalt-4);border-radius:8px;cursor:pointer;color:var(--smoke);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.book-cover-btn:active{border-color:var(--amber);color:var(--amber)}
+.cover-pick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:50vh;overflow-y:auto}
+.cover-pick{position:relative;cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid transparent}
+.cover-pick.sel{border-color:var(--amber)}
+.cover-pick img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.cover-pick-badge{position:absolute;bottom:3px;left:3px;right:3px;background:rgba(245,158,11,.95);color:#0f0f0f;font-size:10px;font-weight:600;line-height:1;padding:3px;border-radius:3px;text-align:center;text-transform:uppercase;letter-spacing:.04em}
 .j-share-row{display:flex;gap:8px;flex-wrap:wrap}
 .j-weather{display:flex;align-items:center;gap:10px;background:var(--asphalt-3);border-radius:8px;padding:8px 10px;margin-bottom:10px}
 .j-weather-icon{font-size:24px}
@@ -1323,6 +1331,52 @@ function renderEditStops(stops){
 function getEditStops(){var stops=[];document.querySelectorAll('#ed-stops .stop-edit-row').forEach(function(row){var n=row.querySelector('.sn').value.trim(),t=row.querySelector('.st').value.trim();if(n)stops.push({n:n,t:t,c:'#f59e0b'});});return stops;}
 
 // ── Trip Book ─────────────────────────────────────────────
+// Resolve the saved cover reference {dayId, idx} to an actual image data URL, or null.
+function getCoverImage(data){
+  if(!data||!data.coverPhoto)return null;
+  var ph=getPhotos(ST.tripId),c=data.coverPhoto;
+  if(ph[c.dayId]&&ph[c.dayId][c.idx]&&ph[c.dayId][c.idx].data)return ph[c.dayId][c.idx].data;
+  return null;
+}
+// Open a grid of all trip photos; tapping one sets it as the cover and re-renders the book.
+function openCoverPicker(data){
+  var photos=getPhotos(ST.tripId);
+  var all=[];
+  data.sections.forEach(function(sec){sec.days.forEach(function(day){
+    (photos[day.id]||[]).forEach(function(ph,idx){all.push({dayId:day.id,idx:idx,data:ph.data,title:day.title});});
+  });});
+  var ov=document.createElement('div');ov.className='modal-overlay open';
+  if(!all.length){
+    ov.innerHTML='<div class="modal"><div class="modal-title">No Photos Yet</div><p style="font-size:14px;color:var(--smoke-light);line-height:1.6;margin-bottom:8px">Add some photos to your trip first, then you can choose one for the cover.</p><div class="modal-actions"><button class="small-btn amber" id="cp-close">OK</button></div></div>';
+    document.body.appendChild(ov);
+    tap(document.getElementById('cp-close'),function(){ov.remove();});
+    tapOutside(ov,function(){ov.remove();});
+    return;
+  }
+  var grid=all.map(function(p,i){
+    var sel=(data.coverPhoto&&data.coverPhoto.dayId===p.dayId&&data.coverPhoto.idx===p.idx);
+    return '<div class="cover-pick'+(sel?' sel':'')+'" data-cpi="'+i+'"><img src="'+p.data+'" alt="">'+(sel?'<span class="cover-pick-badge">✓ Cover</span>':'')+'</div>';
+  }).join('');
+  ov.innerHTML='<div class="modal" style="max-width:480px"><div class="modal-title">Choose a Cover Photo</div>'
+    +'<p style="font-size:13px;color:var(--smoke);margin-bottom:12px">Tap any photo to use it on your Trip Book cover.</p>'
+    +'<div class="cover-pick-grid">'+grid+'</div>'
+    +'<div class="modal-actions" style="margin-top:14px">'+(data.coverPhoto?'<button class="small-btn" id="cp-clear">Remove Cover</button>':'')+'<button class="small-btn" id="cp-cancel">Cancel</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelectorAll('.cover-pick').forEach(function(cell){
+    tap(cell,function(){
+      var p=all[parseInt(cell.getAttribute('data-cpi'))];
+      data.coverPhoto={dayId:p.dayId,idx:p.idx};
+      saveTD(ST.tripId,data);
+      ov.remove();
+      renderBook(data);
+    });
+  });
+  var clr=document.getElementById('cp-clear');
+  if(clr)tap(clr,function(){data.coverPhoto=null;saveTD(ST.tripId,data);ov.remove();renderBook(data);});
+  tap(document.getElementById('cp-cancel'),function(){ov.remove();});
+  tapOutside(ov,function(){ov.remove();});
+}
+
 function renderBook(data){
   var el=document.getElementById('panel-book'),jrn=getJournal(ST.tripId),odo=getOdo(ST.tripId),photos=getPhotos(ST.tripId);
   var allDays=[];data.sections.forEach(function(sec){sec.days.forEach(function(day){allDays.push({day:day,sec:sec});});});
@@ -1330,6 +1384,8 @@ function renderBook(data){
   var totalPhotos=0;allDays.forEach(function(entry){totalPhotos+=(photos[entry.day.id]||[]).length;});
   var html='<div style="padding-bottom:20px"><div style="display:flex;gap:8px;margin-bottom:16px"><button id="book-print-btn" style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:10px;border-radius:8px;cursor:pointer;border:1px solid #2e2e2e;background:transparent;color:#bbb">🖨 Print / Save PDF</button><button id="book-share-btn" style="flex:1;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:10px;border-radius:8px;cursor:pointer;border:none;background:#f59e0b;color:#0f0f0f">📤 Share Book</button></div>'
     +'<div id="trip-book-content"><div style="background:#0f0f0f;border:1px solid #2e2e2e;border-top:4px solid #f59e0b;border-radius:12px;padding:28px 20px 24px;margin-bottom:12px;text-align:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#92600a;margin-bottom:12px">Rumbling Nomad · Trip Journal</div>'
+    +(getCoverImage(data)?'<img class="book-cover-img" src="'+getCoverImage(data)+'" alt="cover">':'')
+    +'<button class="book-cover-btn" id="book-cover-btn">'+(data.coverPhoto?'📷 Change Cover Photo':'📷 Select Cover Photo')+'</button>'
     +'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:42px;letter-spacing:.04em;color:#f5f5f0;line-height:1;margin-bottom:4px">'+e(data.from)+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;letter-spacing:.04em;color:#f59e0b;margin-bottom:4px">→</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:42px;letter-spacing:.04em;color:#f5f5f0;line-height:1;margin-bottom:20px">'+e(data.to)+'</div>'
     +'<div style="width:60px;height:1px;background:#2e2e2e;margin:0 auto 16px"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;color:#888;margin-bottom:4px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;color:#555">'+e(data.tagline||'')+'</div>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px"><div style="background:#1a1a1a;border-radius:8px;padding:10px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#555;margin-bottom:2px">Miles</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:#f59e0b">'+(totalOdoMiles>0?totalOdoMiles.toLocaleString():e(data.totalMiles||'TBD'))+'</div></div><div style="background:#1a1a1a;border-radius:8px;padding:10px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#555;margin-bottom:2px">Nights</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:#f59e0b">'+e(data.nights||allDays.length)+'</div></div><div style="background:#1a1a1a;border-radius:8px;padding:10px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#555;margin-bottom:2px">Photos</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:#f59e0b">'+totalPhotos+'</div></div></div></div>';
@@ -1362,13 +1418,16 @@ function renderBook(data){
     +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;color:#555;margin-bottom:4px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#333;margin-top:16px">Rumbling Nomad</div></div></div></div>';
   el.innerHTML=html;
   tap(document.getElementById('book-print-btn'),function(){generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhotos);});
+  tap(document.getElementById('book-cover-btn'),function(){openCoverPicker(data);});
   tap(document.getElementById('book-share-btn'),function(){if(navigator.share){navigator.share({title:'My Trip: '+data.from+' → '+data.to,text:'Check out my Rumbling Nomad trip journal',url:shareUrl(ST.tripId)}).catch(function(){});}else{if(navigator.clipboard)navigator.clipboard.writeText(shareUrl(ST.tripId)).then(function(){alert('Link copied!');});}});
 }
 
 function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhotos){
   var certMiles=totalOdoMiles>0?totalOdoMiles.toLocaleString():(data.totalMiles||'');
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+e(data.from)+' → '+e(data.to)+' · Rumbling Nomad</title><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;color:#111;font-family:"Barlow",sans-serif;}@media print{.page{page-break-after:always;}.keep{page-break-inside:avoid;break-inside:avoid;}.cert-page{page-break-after:avoid;}}.page{max-width:720px;margin:0 auto;padding:40px 32px;}.keep{page-break-inside:avoid;break-inside:avoid;}.photo-block{page-break-inside:avoid;break-inside:avoid;margin-bottom:14px;}.photo-block img{width:100%;display:block;}</style></head><body>';
-  html+='<div class="page" style="text-align:center;padding-top:80px;padding-bottom:80px;border-bottom:3px solid #f59e0b;min-height:100vh;display:flex;flex-direction:column;justify-content:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#999;margin-bottom:24px">Rumbling Nomad · Trip Journal</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:64px;letter-spacing:.04em;color:#111;line-height:1">'+e(data.from)+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b;margin:8px 0">→</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:64px;letter-spacing:.04em;color:#111;line-height:1;margin-bottom:32px">'+e(data.to)+'</div><div style="width:80px;height:2px;background:#f59e0b;margin:0 auto 24px"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;color:#666;margin-bottom:8px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;color:#999;margin-bottom:48px">'+e(data.tagline||'')+'</div><div style="display:flex;justify-content:center;gap:48px"><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#f59e0b">'+certMiles+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#999">Miles</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#f59e0b">'+allDays.length+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#999">Days</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#f59e0b">'+totalPhotos+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#999">Photos</div></div></div><div style="margin-top:auto;padding-top:60px;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#ccc">rumblingnomad.com</div></div>';
+  var coverImg=getCoverImage(data);
+  var coverHtml=coverImg?'<img src="'+coverImg+'" style="width:100%;max-width:560px;max-height:340px;object-fit:cover;border-radius:6px;margin:0 auto 36px;display:block;box-shadow:0 4px 16px rgba(0,0,0,.18)" alt="cover">':'';
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+e(data.from)+' → '+e(data.to)+' · Rumbling Nomad</title><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;color:#111;font-family:"Barlow",sans-serif;}@media print{.page{page-break-after:always;}.keep{page-break-inside:avoid;break-inside:avoid;}.cert-page{page-break-after:avoid;}}.page{max-width:720px;margin:0 auto;padding:40px 32px;}.keep{page-break-inside:avoid;break-inside:avoid;}.photo-block{page-break-inside:avoid;break-inside:avoid;margin-bottom:14px;text-align:center;}.photo-block img{max-width:100%;max-height:6.2in;width:auto;height:auto;display:inline-block;}@media screen{.photo-block img{max-height:520px;}}</style></head><body>';
+  html+='<div class="page" style="text-align:center;padding-top:'+(coverImg?'48px':'80px')+';padding-bottom:80px;border-bottom:3px solid #f59e0b;min-height:100vh;display:flex;flex-direction:column;justify-content:center"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#999;margin-bottom:24px">Rumbling Nomad · Trip Journal</div>'+coverHtml+'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:64px;letter-spacing:.04em;color:#111;line-height:1">'+e(data.from)+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:40px;color:#f59e0b;margin:8px 0">→</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:64px;letter-spacing:.04em;color:#111;line-height:1;margin-bottom:32px">'+e(data.to)+'</div><div style="width:80px;height:2px;background:#f59e0b;margin:0 auto 24px"></div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:18px;color:#666;margin-bottom:8px">'+e(data.startDate)+' – '+e(data.endDate)+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;color:#999;margin-bottom:48px">'+e(data.tagline||'')+'</div><div style="display:flex;justify-content:center;gap:48px"><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#f59e0b">'+certMiles+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#999">Miles</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#f59e0b">'+allDays.length+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#999">Days</div></div><div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:#f59e0b">'+totalPhotos+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#999">Photos</div></div></div><div style="margin-top:auto;padding-top:60px;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#ccc">rumblingnomad.com</div></div>';
   allDays.forEach(function(entry){
     var day=entry.day,dayJrn=jrn[day.id]||{},dayOdo=odo[day.id]||{},dayPhotos=photos[day.id]||[],dayMiles=dayOdo.start&&dayOdo.end&&dayOdo.end>dayOdo.start?dayOdo.end-dayOdo.start:0;
     html+='<div class="page"><div style="border-bottom:2px solid #f59e0b;padding-bottom:12px;margin-bottom:20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999">'+e(day.date)+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;letter-spacing:.03em;color:#111;flex:1">'+e(day.title)+'</div>'+(dayMiles>0?'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:#f59e0b">'+dayMiles+' mi</div>':'')+'</div>';
@@ -1379,7 +1438,7 @@ function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhot
       if(anyCapP){
         html+='<div style="display:flex;flex-direction:column;gap:14px">';
         dayPhotos.forEach(function(ph){
-          html+='<div class="photo-block"><img src="'+ph.data+'" style="width:100%;border-radius:4px;display:block" alt="">'+(ph.caption&&ph.caption.trim()?'<div style="font-size:13px;color:#555;line-height:1.6;font-style:italic;padding:6px 2px 0">'+e(ph.caption)+'</div>':'')+'</div>';
+          html+='<div class="photo-block"><img src="'+ph.data+'" style="max-width:100%;max-height:6.2in;width:auto;height:auto;border-radius:4px;display:inline-block" alt="">'+(ph.caption&&ph.caption.trim()?'<div style="font-size:13px;color:#555;line-height:1.6;font-style:italic;padding:6px 2px 0">'+e(ph.caption)+'</div>':'')+'</div>';
         });
         html+='</div>';
       }else{
