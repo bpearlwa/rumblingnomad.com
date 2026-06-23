@@ -1669,14 +1669,34 @@ function generateBookPDF(data){
     doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(180,180,180);
     doc.text('rumblingnomad.com',midX,cyc,{align:'center'});
 
-    // ─── SAVE ───
+    // ─── SAVE / SHARE ───
     if(ov)ov.remove();
     var fname=((data.from||'trip')+'-'+(data.to||'')).replace(/[^a-z0-9]+/gi,'-')+'-Rumbling-Nomad.pdf';
-    doc.save(fname);
+    var blob=doc.output('blob');
+    var file=null;
+    try{file=new File([blob],fname,{type:'application/pdf'});}catch(e){file=null;}
+    // On iOS/mobile, hand the file straight to the native share sheet so tapping
+    // "Download" pops Save to Files / AirDrop / Mail — no Safari preview detour.
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:fname}).catch(function(err){
+        // user cancelled or share failed — fall back to a direct download
+        if(err&&err.name==='AbortError')return;
+        triggerDownload(blob,fname);
+      });
+    }else{
+      triggerDownload(blob,fname);
+    }
   }).catch(function(err){
     if(ov)ov.remove();
     alert('Couldn\'t build the PDF: '+(err&&err.message?err.message:'unknown error'));
   });
+}
+// Fallback download for desktop / browsers without file-share support.
+function triggerDownload(blob,fname){
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=fname;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},1500);
 }
 
 function generatePrintWindow(data,allDays,jrn,odo,photos,totalOdoMiles,totalPhotos){
