@@ -2527,6 +2527,163 @@ document.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('.modal-overlay').forEach(function(ov){tapOutside(ov,function(){ov.classList.remove('open');});});
   renderHome();checkUrl();
 });
+(function(){
+
+  /* ---------- shared style ---------- */
+  var s=document.createElement('style');
+  s.textContent='.odo-nudge{background:#2e1a0a;border:1px solid #92600a;border-radius:6px;padding:8px 10px;margin:0 0 10px;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:600;letter-spacing:.03em;color:#fcd34d;cursor:pointer;line-height:1.4}.odo-nudge:active{border-color:#f59e0b}';
+  document.head.appendChild(s);
+
+  /* ---------- shared helper ---------- */
+  function orderedDayIdsFor(data){
+    var ids=[];
+    if(data&&data.sections)data.sections.forEach(function(sec){(sec.days||[]).forEach(function(d){ids.push(d.id);});});
+    return ids;
+  }
+  function countDays(data){
+    var n=0;if(data&&data.sections)data.sections.forEach(function(s){n+=(s.days||[]).length;});return n;
+  }
+
+  /* ============================================================
+     1) NIGHTLY ODOMETER REMINDER
+     ============================================================ */
+  function setDayEndOdometer(tripId,dayId,endVal){
+    var data=getTD(tripId);if(!data)return;
+    var odo=getOdo(tripId);if(!odo[dayId])odo[dayId]={};
+    odo[dayId].end=endVal;odo[dayId].est=false;
+    var ids=orderedDayIdsFor(data),idx=ids.indexOf(dayId),running=endVal;
+    for(var k=idx+1;k<ids.length;k++){
+      var nid=ids[k],nd=odo[nid]||{};
+      var dist=(nd.end!=null&&nd.start!=null&&nd.end>nd.start)?(nd.end-nd.start):0;
+      nd.start=running;nd.end=running+dist;odo[nid]=nd;running=nd.end;
+    }
+    saveOdo(tripId,odo);
+  }
+  function dayMissingEnd(tripId,dayId){
+    var o=(getOdo(tripId)[dayId])||{};
+    if(o.end!=null&&o.end!==''&&!isNaN(parseInt(o.end)))return false;
+    var ph=getPhotos(tripId);
+    return (ph[dayId]||[]).length>0;
+  }
+  function promptEndOdometer(tripId,dayId,cb){
+    var data=getTD(tripId),day=getDayById(data,dayId),o=(getOdo(tripId)[dayId])||{};
+    var ov=document.createElement('div');ov.className='modal-overlay open';
+    ov.innerHTML='<div class="modal"><div class="modal-title">Tonight’s Odometer</div>'
+      +'<p style="font-size:13px;color:var(--smoke);line-height:1.6;margin-bottom:6px">Log the miles for <b style="color:var(--white)">'+e(day.title||day.date||'this day')+'</b>. What does your bike’s odometer read right now?</p>'
+      +'<p style="font-size:12px;color:var(--smoke);margin-bottom:12px">This becomes tomorrow’s starting number automatically — you only enter it once a day.</p>'
+      +'<div class="field-label">Odometer reading</div>'
+      +'<input class="edit-field" id="peo-input" type="number" inputmode="numeric" placeholder="e.g. 48263" style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;letter-spacing:.04em;text-align:center">'
+      +(o.start!=null?'<div style="font-size:11px;color:var(--smoke);text-align:center;margin-top:6px">Started today at '+e(o.start)+' mi</div>':'')
+      +'<div class="modal-actions"><button class="small-btn" id="peo-skip">Later</button><button class="small-btn amber" id="peo-save">Save Miles</button></div></div>';
+    document.body.appendChild(ov);
+    var done=function(){if(ov.parentNode)ov.remove();if(cb)cb();};
+    tap(document.getElementById('peo-skip'),done);
+    tapOutside(ov,done);
+    tap(document.getElementById('peo-save'),function(){
+      var v=parseInt(document.getElementById('peo-input').value);
+      if(!isNaN(v)&&v>=0)setDayEndOdometer(tripId,dayId,v);
+      done();
+    });
+  }
+  function enhanceOdoNudges(){
+    var tripId=ST.tripId;if(!tripId)return;
+    var panel=document.getElementById('panel-journal');if(!panel)return;
+    panel.querySelectorAll('.journal-odometer').forEach(function(row){
+      if(row.parentNode&&row.parentNode.querySelector('.odo-nudge'))return;
+      var endInp=row.querySelector('.odo-input[data-odofield="end"]');if(!endInp)return;
+      var dayId=endInp.getAttribute('data-odo');
+      if(!dayMissingEnd(tripId,dayId))return;
+      var n=document.createElement('div');n.className='odo-nudge';
+      n.innerHTML='⚠️ Add tonight’s odometer to log this day’s miles';
+      row.parentNode.insertBefore(n,row.nextSibling);
+      tap(n,function(){endInp.focus();setTimeout(function(){endInp.scrollIntoView({behavior:'smooth',block:'center'});},120);});
+    });
+  }
+  var reminded={};
+  function maybeRemindOdo(tripId){
+    if(ST.tripId!==tripId)return;
+    var data=getTD(tripId);if(!data)return;
+    var ids=orderedDayIdsFor(data),target=null;
+    for(var i=ids.length-1;i>=0;i--){if(dayMissingEnd(tripId,ids[i])){target=ids[i];break;}}
+    if(!target)return;
+    var key=tripId+':'+target;if(reminded[key])return;reminded[key]=true;
+    promptEndOdometer(tripId,target,function(){if(ST.tab==='journal')renderJournal(getTD(tripId));});
+  }
+
+  /* ============================================================
+     2) "＋ NEW DAY" WHEN IMPORTING TO AN EXISTING TRIP
+     ============================================================ */
+  function addDayFromImport(tripId,withGps){
+    var data=getTD(tripId);if(!data)return null;
+    if(!data.sections||!data.sections.length){data.sections=[{id:'ride',label:'The Ride',icon:'→',days:[]}];}
+    var sec=data.sections[data.sections.length-1];
+    var sorted=(withGps||[]).slice().sort(function(a,b){return (a.ts||0)-(b.ts||0);});
+    var firstTs=(sorted.length&&sorted[0].ts)?new Date(sorted[0].ts):new Date();
+    var newDay={
+      id:'day_'+Date.now(),
+      date:firstTs.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}),
+      title:'Day '+(countDays(data)+1),
+      stops:[], note:''
+    };
+    sec.days.push(newDay);
+    saveTD(tripId,data);
+    return newDay.id;
+  }
+  /* wrap the existing day-picker so it also offers a fresh day */
+  if(typeof pickDayInTrip==='function'){
+    var _pdit=pickDayInTrip;
+    pickDayInTrip=function(tripId,withGps){
+      _pdit(tripId,withGps);
+      var modal=document.getElementById('imp-save-modal');if(!modal)return;
+      var list=modal.querySelector('.imp-day-list');if(!list)return;
+      if(list.querySelector('[data-newday]'))return;
+      var btn=document.createElement('button');
+      btn.className='imp-day-choice';btn.setAttribute('data-newday','1');
+      btn.innerHTML='<span class="imp-day-choice-date">NEW</span><span class="imp-day-choice-title">＋ Start a new day for these photos</span>';
+      list.insertBefore(btn,list.firstChild);
+      tap(btn,function(){
+        var newId=addDayFromImport(tripId,withGps);
+        if(newId&&typeof saveImportToDay==='function')saveImportToDay(newId,withGps,modal,tripId);
+      });
+    };
+  }
+
+  /* ============================================================
+     3) "＋ ADD A DAY" ON THE TRIP OVERVIEW   +   4) RELABEL EDIT
+     ============================================================ */
+  function openAddDayModal(tripId){
+    var data=getTD(tripId);if(!data)return;
+    if(!data.sections||!data.sections.length){data.sections=[{id:'ride',label:'The Ride',icon:'→',days:[]}];saveTD(tripId,data);}
+    ST.editSecIdx=data.sections.length-1;
+    ST.editDayIdx=-1;
+    document.getElementById('modal-day-title').textContent='Add Day';
+    ['ed-date','ed-title','ed-miles','ed-hotel'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('ed-title').value='Day '+(countDays(data)+1);
+    document.getElementById('ed-stops').innerHTML='';
+    openModal('modal-day');
+  }
+  function enhanceOverview(){
+    var panel=document.getElementById('panel-overview');if(!panel)return;
+    /* relabel the Edit Trip button so it reads true */
+    var editBtn=panel.querySelector('#btn-edit-trip-info');
+    if(editBtn&&editBtn.textContent.trim()==='Edit Trip')editBtn.textContent='Edit Trip Info';
+    /* inject an obvious Add Day button under the stat grid */
+    if(panel.querySelector('[data-ovaddday]'))return;
+    var grid=panel.querySelector('.stat-grid');if(!grid)return;
+    var b=document.createElement('button');
+    b.className='add-row-btn';b.setAttribute('data-ovaddday','1');
+    b.style.cssText='margin:0 0 14px;border-style:solid;border-color:#2e2e2e';
+    b.innerHTML='＋ Add a Day to This Trip';
+    grid.parentNode.insertBefore(b,grid.nextSibling);
+    tap(b,function(){openAddDayModal(ST.tripId);});
+  }
+
+  /* ---------- hook into the app without replacing anything ---------- */
+  if(typeof renderJournal==='function'){var _rj=renderJournal;renderJournal=function(d){_rj(d);try{enhanceOdoNudges();}catch(err){}};}
+  if(typeof renderOverview==='function'){var _ro=renderOverview;renderOverview=function(d){_ro(d);try{enhanceOverview();}catch(err){}};}
+  if(typeof openTrip==='function'){var _ot=openTrip;openTrip=function(id){_ot(id);setTimeout(function(){try{maybeRemindOdo(id);}catch(err){}},800);};}
+
+})();
 })();
 </script>
 </body>
