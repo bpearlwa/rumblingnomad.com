@@ -2684,6 +2684,37 @@ document.addEventListener('DOMContentLoaded',function(){
   if(typeof openTrip==='function'){var _ot=openTrip;openTrip=function(id){_ot(id);setTimeout(function(){try{maybeRemindOdo(id);}catch(err){}},800);};}
 
 })();
+(function(){
+  function fixJournalPhotos(){
+    var panel=document.getElementById('panel-journal');if(!panel)return;
+    if(!ST.tripId)return;
+    panel.querySelectorAll('.j-photo-item').forEach(function(item){
+      var img=item.querySelector('.j-photo-item-img[data-viewphoto]');
+      if(!img)return;
+      var dayId=img.getAttribute('data-viewphoto'),idx=parseInt(img.getAttribute('data-photoidx'));
+      // remove the tap-to-open handler by swapping in a clean clone of the image
+      if(!img.getAttribute('data-nozoom')){
+        var clone=img.cloneNode(true);clone.setAttribute('data-nozoom','1');clone.style.cursor='default';
+        img.parentNode.replaceChild(clone,img);img=clone;
+      }
+      // keep a way to delete a photo on purpose
+      if(!item.querySelector('[data-jdel]')){
+        item.style.position='relative';
+        var del=document.createElement('button');del.setAttribute('data-jdel','1');del.textContent='🗑';
+        del.style.cssText='position:absolute;top:6px;right:6px;background:rgba(15,15,15,.72);border:1px solid #2e2e2e;color:#fff;border-radius:6px;width:32px;height:32px;font-size:15px;line-height:1;cursor:pointer;z-index:5';
+        item.appendChild(del);
+        (function(dId,ix){
+          tap(del,function(){
+            if(!confirm('Delete this photo?'))return;
+            var ph=getPhotos(ST.tripId);
+            if(ph[dId]&&ph[dId][ix]){ph[dId].splice(ix,1);savePhotos(ST.tripId,ph);renderJournal(getTD(ST.tripId));}
+          });
+        })(dayId,idx);
+      }
+    });
+  }
+  if(typeof renderJournal==='function'){var _rjp=renderJournal;renderJournal=function(d){_rjp(d);try{fixJournalPhotos();}catch(err){}};}
+})();
 })();
 </script>
 </body>
