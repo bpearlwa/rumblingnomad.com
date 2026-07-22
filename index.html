@@ -335,6 +335,22 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
 .imp-day-choice:active{border-color:var(--amber)}
 .imp-day-choice-date{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--smoke);pointer-events:none}
 .imp-day-choice-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--white);line-height:1.2;pointer-events:none}
+.bud-total-card{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-top:3px solid var(--amber);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center}
+.bud-total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--smoke);margin-bottom:3px}
+.bud-total-val{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--amber);line-height:1}
+.bud-cat-wrap{background:var(--asphalt-2);border:1px solid var(--asphalt-3);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+.bud-cat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--asphalt-3)}
+.bud-cat-row:last-child{border-bottom:none}
+.bud-cat-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--smoke-light)}
+.bud-cat-amt{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--amber)}
+.bud-day-total{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--amber);letter-spacing:.03em}
+.bud-row{display:flex;gap:5px;align-items:center;margin-bottom:6px}
+.bud-amt{width:76px;flex-shrink:0;background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:5px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:16px;padding:6px 5px;outline:none;text-align:center;letter-spacing:.03em}
+.bud-cat{width:88px;flex-shrink:0;background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:5px;color:var(--white);font-family:'Barlow',sans-serif;font-size:12px;padding:6px 7px;outline:none}
+.bud-note{flex:1;min-width:0;background:var(--asphalt-3);border:1px solid var(--asphalt-4);border-radius:5px;color:var(--white);font-family:'Barlow',sans-serif;font-size:12px;padding:6px 7px;outline:none}
+.bud-amt:focus,.bud-cat:focus,.bud-note:focus{border-color:var(--amber-dim)}
+.bud-del{background:transparent;border:none;color:var(--asphalt-4);font-size:15px;cursor:pointer;padding:0 3px;flex-shrink:0;line-height:1}
+.bud-del:active{color:var(--ember)}
 </style>
 </head>
 <body>
@@ -365,6 +381,7 @@ textarea.edit-field{resize:none;min-height:58px;line-height:1.5}
     <div id="panel-journal" class="panel"></div>
     <div id="panel-weather" class="panel"></div>
     <div id="panel-book" class="panel"></div>
+    <div id="panel-budget" class="panel"></div>
     <div id="panel-ride" class="panel" style="padding:0"></div>
   </div>
   <div class="bottom-nav" id="bottom-nav" style="display:none"></div>
@@ -682,6 +699,8 @@ function savePhotos(id,d){
 }
 function getOdo(id){return S.get('rn_odo_'+id)||{};}
 function saveOdo(id,d){S.set('rn_odo_'+id,d);}
+function getBudget(id){return S.get('rn_bud_'+id)||{cats:[],days:{}};}
+function saveBudget(id,d){S.set('rn_bud_'+id,d);}
 
 function initDefault(){
   // Home screen starts clean — trips are created by the user (from photos or manually).
@@ -1004,6 +1023,7 @@ function openTrip(id){
     +data.sections.map(function(s){return '<div class="nav-tab" data-main="'+s.id+'">'+e(s.label)+'</div>';}).join('')
     +'<div class="nav-tab" data-main="journal">Journal</div>'
     +'<div class="nav-tab" data-main="book">Trip Book</div>'
+    +'<div class="nav-tab" data-main="budget">Budget</div>'
     +'<div class="nav-tab" data-main="weather">Weather</div>'
     +'<div class="nav-tab" data-main="checklist">Checklist</div>'
     +'<div class="nav-tab" data-main="ride">Organize</div>';
@@ -1028,6 +1048,7 @@ function showTab(tid,data){
   else if(tid==='journal'){renderJournal(data);showPanel('panel-journal');}
   else if(tid==='weather'){renderWeather(data);showPanel('panel-weather');}
   else if(tid==='book'){renderBook(data);showPanel('panel-book');}
+  else if(tid==='budget'){renderBudget(data);showPanel('panel-budget');}
   else if(tid==='ride'){renderImport(data);showPanel('panel-ride');}
   else{var sec=data.sections.find(function(s){return s.id===tid;});if(sec){renderSection(sec,data);showPanel('panel-'+tid);}}
 }
@@ -1330,6 +1351,86 @@ function renderEditStops(stops){
   list.querySelectorAll('[data-ds]').forEach(function(btn){tap(btn,function(){btn.closest('.stop-edit-row').remove();});});
 }
 function getEditStops(){var stops=[];document.querySelectorAll('#ed-stops .stop-edit-row').forEach(function(row){var n=row.querySelector('.sn').value.trim(),t=row.querySelector('.st').value.trim();if(n)stops.push({n:n,t:t,c:'#f59e0b'});});return stops;}
+
+// ── Budget Tracker ────────────────────────────────────────
+function budgetTotals(bud,allDays){
+  var total=0,byCat={};
+  allDays.forEach(function(en){
+    (bud.days[en.day.id]||[]).forEach(function(x){
+      var amt=parseFloat(x.amt)||0;
+      total+=amt;
+      var c=x.cat||'Uncategorized';
+      byCat[c]=(byCat[c]||0)+amt;
+    });
+  });
+  return {total:total,byCat:byCat};
+}
+function money(n){return '$'+(Math.round(n*100)/100).toFixed(2);}
+
+function renderBudget(data){
+  var el=document.getElementById('panel-budget');
+  var bud=getBudget(ST.tripId);
+  var allDays=[];data.sections.forEach(function(sec){sec.days.forEach(function(day){allDays.push({day:day});});});
+  var t=budgetTotals(bud,allDays);
+  var catOpts=bud.cats.map(function(c){return '<option value="'+e(c)+'">';}).join('');
+
+  var html='<div class="sec-header">Budget</div>'
+    +'<div class="bud-total-card"><div class="bud-total-lbl">Total Spent</div><div class="bud-total-val">'+money(t.total)+'</div></div>';
+
+  var catKeys=Object.keys(t.byCat);
+  if(catKeys.length){
+    html+='<div class="bud-cat-wrap">';
+    catKeys.sort(function(a,b){return t.byCat[b]-t.byCat[a];}).forEach(function(c){
+      html+='<div class="bud-cat-row"><div class="bud-cat-name">'+e(c)+'</div><div class="bud-cat-amt">'+money(t.byCat[c])+'</div></div>';
+    });
+    html+='</div>';
+  }
+
+  html+='<datalist id="bud-cat-list">'+catOpts+'</datalist>';
+
+  allDays.forEach(function(en){
+    var day=en.day,rows=bud.days[day.id]||[];
+    var dayTotal=0;rows.forEach(function(x){dayTotal+=parseFloat(x.amt)||0;});
+    html+='<div class="journal-day"><div class="journal-day-header"><div class="journal-day-date">'+e(day.date)+'</div><div class="journal-day-title">'+e(day.title)+'</div>'+(dayTotal>0?'<div class="bud-day-total">'+money(dayTotal)+'</div>':'')+'</div><div class="journal-day-body">';
+    rows.forEach(function(x,xi){
+      html+='<div class="bud-row">'
+        +'<input class="bud-amt" type="number" inputmode="decimal" step="0.01" placeholder="0.00" value="'+e(x.amt||'')+'" data-bd="'+e(day.id)+'" data-bi="'+xi+'" data-bf="amt">'
+        +'<input class="bud-cat" list="bud-cat-list" placeholder="Category" value="'+e(x.cat||'')+'" data-bd="'+e(day.id)+'" data-bi="'+xi+'" data-bf="cat">'
+        +'<input class="bud-note" placeholder="Where / what" value="'+e(x.note||'')+'" data-bd="'+e(day.id)+'" data-bi="'+xi+'" data-bf="note">'
+        +'<button class="bud-del" data-bdel="'+e(day.id)+'" data-bdi="'+xi+'">✕</button>'
+        +'</div>';
+    });
+    html+='<button class="add-row-btn" data-badd="'+e(day.id)+'">+ Add Expense</button></div></div>';
+  });
+  el.innerHTML=html;
+
+  el.querySelectorAll('[data-bf]').forEach(function(inp){
+    inp.addEventListener('blur',function(){
+      var b=getBudget(ST.tripId);
+      var d=inp.getAttribute('data-bd'),i=parseInt(inp.getAttribute('data-bi')),f=inp.getAttribute('data-bf');
+      if(!b.days[d]||!b.days[d][i])return;
+      b.days[d][i][f]=inp.value;
+      if(f==='cat'&&inp.value.trim()&&b.cats.indexOf(inp.value.trim())===-1)b.cats.push(inp.value.trim());
+      saveBudget(ST.tripId,b);
+      if(f==='amt'||f==='cat')renderBudget(getTD(ST.tripId));
+    });
+    inp.addEventListener('focus',function(){setTimeout(function(){inp.scrollIntoView({behavior:'smooth',block:'center'});},300);});
+  });
+  el.querySelectorAll('[data-badd]').forEach(function(btn){
+    tap(btn,function(){
+      var b=getBudget(ST.tripId),d=btn.getAttribute('data-badd');
+      if(!b.days[d])b.days[d]=[];
+      b.days[d].push({amt:'',cat:'',note:''});
+      saveBudget(ST.tripId,b);renderBudget(getTD(ST.tripId));
+    });
+  });
+  el.querySelectorAll('[data-bdel]').forEach(function(btn){
+    tap(btn,function(){
+      var b=getBudget(ST.tripId),d=btn.getAttribute('data-bdel'),i=parseInt(btn.getAttribute('data-bdi'));
+      b.days[d].splice(i,1);saveBudget(ST.tripId,b);renderBudget(getTD(ST.tripId));
+    });
+  });
+}
 
 // ── Trip Book ─────────────────────────────────────────────
 // Resolve the saved cover reference {dayId, idx} to an actual image data URL, or null.
